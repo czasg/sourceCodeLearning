@@ -18,12 +18,12 @@ async def startup(uri):
 
 
 if __name__ == '__main__':
-    # remote = 'wss://api.bbxapp.vip/v1/ifcontract/realTime'
-    # asyncio.get_event_loop().run_until_complete(startup(remote))
-    # handler = AioWebSocket('').manipulator
-    # print(handler)
+    remote = 'wss://api.bbxapp.vip/v1/ifcontract/realTime'
+    asyncio.get_event_loop().run_until_complete(startup(remote))
+    handler = AioWebSocket('').manipulator
+    print(handler)
 
-    remote = 'wss://127.0.0.1:8080'
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(startup(remote))
-    loop.run_forever()
+    # remote = 'wss://127.0.0.1:8080'
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(startup(remote))
+    # loop.run_forever()
