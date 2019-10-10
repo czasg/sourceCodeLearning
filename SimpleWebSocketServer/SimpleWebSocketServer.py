@@ -38,7 +38,7 @@ class HTTPRequest(BaseHTTPRequestHandler):
           self.rfile = StringIO(request_text)
       self.raw_requestline = self.rfile.readline()  # 把头读出来吗
       self.error_code = self.error_message = None
-      self.parse_request()  # 这里貌似是手机headers信息的
+      self.parse_request()  # 这里貌似是收集headers信息的
 
 _VALID_STATUS_CODES = [1000, 1001, 1002, 1003, 1007, 1008,
                         1009, 1010, 1011, 3000, 3999, 4000, 4999]
