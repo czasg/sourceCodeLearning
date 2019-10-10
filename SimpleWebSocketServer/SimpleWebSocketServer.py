@@ -62,8 +62,8 @@ FAILED_HANDSHAKE_STR = (
 GUID_STR = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'  # 这个是密钥，我懂滴
 
 STREAM = 0x0
-TEXT = 0x1
-BINARY = 0x2
+TEXT = 0x1  # 其实我只要针对处理字符串的就行了，太多了反而麻烦耶
+BINARY = 0x2  # 是二进制还是文本呀，好像是二进制耶
 CLOSE = 0x8
 PING = 0x9
 PONG = 0xA
@@ -151,7 +151,7 @@ class WebSocket(object):
           # unknown or reserved opcode so just close
          raise Exception('unknown opcode')
 
-      if self.opcode == CLOSE:  # 0x8
+      if self.opcode == CLOSE:  # 0x8  就是说状态是关闭咯，直接干啥
          status = 1000  # 标记当前状态
          reason = u''
          length = len(self.data)  # 不忘获取数据的长度
@@ -398,7 +398,7 @@ class WebSocket(object):
         if _check_unicode(data):
            data = data.encode('utf-8')  # 转化为二进制
 
-        length = len(data)
+        length = len(data)  # 来了
         payload.append(b1)
 
         if length <= 125:  # 这个写的还蛮漂亮的嘛
@@ -425,8 +425,8 @@ class WebSocket(object):
       # read in the header
       if self.state == HEADERB1:  # 不同的长度有不用的解析方式咯
 
-         self.fin = byte & 0x80
-         self.opcode = byte & 0x0F
+         self.fin = byte & 0x80  # 128
+         self.opcode = byte & 0x0F  # 15
          self.state = HEADERB2
 
          self.index = 0
@@ -559,7 +559,7 @@ class WebSocket(object):
                self.state = PAYLOAD
 
       # PAYLOAD STATE
-      elif self.state == PAYLOAD:  # 这是有什么讲究呀，这些协议研究起来真是烦恼
+      elif self.state == PAYLOAD:  # 7 这是有什么讲究呀，这些协议研究起来真是烦恼
          if self.hasmask is True:
             self.data.append( byte ^ self.maskarray[self.index % 4] )  # 这就尴尬了，我就是用的这种解析
          else:
