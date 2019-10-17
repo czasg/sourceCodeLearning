@@ -95,7 +95,7 @@ def _run_print_help(parser, func, *a, **kw):
         sys.exit(2)
 
 def execute(argv=None, settings=None):
-    if argv is None:
+    if argv is None:  # 获取参数
         argv = sys.argv
 
     # --- backwards compatibility for scrapy.conf.settings singleton ---
@@ -106,7 +106,7 @@ def execute(argv=None, settings=None):
     # ------------------------------------------------------------------
 
     if settings is None:
-        settings = get_project_settings()
+        settings = get_project_settings()  # 从scrapy.cfg里面找到对应的setting，并加载
         # set EDITOR from environment if available
         try:
             editor = os.environ['EDITOR']
@@ -124,12 +124,12 @@ def execute(argv=None, settings=None):
         conf.settings = settings
     # ------------------------------------------------------------------
 
-    inproject = inside_project()
-    cmds = _get_commands_dict(settings, inproject)
+    inproject = inside_project()  # True 是否在项目内
+    cmds = _get_commands_dict(settings, inproject)  # 加载所有的scrapy指令的意思嘛
     cmdname = _pop_command_name(argv)
     parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), \
         conflict_handler='resolve')
-    if not cmdname:
+    if not cmdname:  # 从输入中找到对应的指令名称
         _print_commands(settings, inproject)
         sys.exit(0)
     elif cmdname not in cmds:
@@ -140,12 +140,12 @@ def execute(argv=None, settings=None):
     parser.usage = "scrapy %s %s" % (cmdname, cmd.syntax())
     parser.description = cmd.long_desc()
     settings.setdict(cmd.default_settings, priority='command')  # 这里貌似为空
-    cmd.settings = settings
+    cmd.settings = settings  # cmd中也有一份settings
     cmd.add_options(parser)
     opts, args = parser.parse_args(args=argv[1:])
     _run_print_help(parser, cmd.process_options, args, opts)
 
-    cmd.crawler_process = CrawlerProcess(settings)
+    cmd.crawler_process = CrawlerProcess(settings)  # 这里是至关重要的一步，初始化爬虫进程进去
     _run_print_help(parser, _run_command, cmd, args, opts)
     sys.exit(cmd.exitcode)
 
@@ -153,7 +153,7 @@ def _run_command(cmd, args, opts):
     if opts.profile:
         _run_command_profiled(cmd, args, opts)
     else:
-        cmd.run(args, opts)
+        cmd.run(args, opts)  # 开始执行cmd中的run方法，此时setting已加载完毕，并存了一份到cmd中
 
 def _run_command_profiled(cmd, args, opts):
     if opts.profile:

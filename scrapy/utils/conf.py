@@ -70,10 +70,10 @@ def closest_scrapy_cfg(path='.', prevpath=None):  # 从当前目录往父级目�
     if path == prevpath:
         return ''
     path = os.path.abspath(path)
-    cfgfile = os.path.join(path, 'scrapy.cfg')
+    cfgfile = os.path.join(path, 'scrapy.cfg')  # 并没有对此文件进行读取的操作吗
     if os.path.exists(cfgfile):
         return cfgfile
-    return closest_scrapy_cfg(os.path.dirname(path), path)
+    return closest_scrapy_cfg(os.path.dirname(path), path)  # 这个递归操作很骚，我喜欢
 
 
 def init_env(project='default', set_syspath=True):
@@ -81,14 +81,14 @@ def init_env(project='default', set_syspath=True):
     dir. This sets the Scrapy settings module and modifies the Python path to
     be able to locate the project module.
     """
-    cfg = get_config()
+    cfg = get_config()  # 但实际这里应该是找不到的把
     if cfg.has_option('settings', project):  # 通过SafeConfigParser模块，加载配置文件后，可以直接使用has_option寻找配置，如default
-        os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)  # get 获取section下option的值，也就是default = scrapyProj.settings
-    closest = closest_scrapy_cfg()
+        os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)  # get 获取section下option的值，也就是default = scrapyProj.settings  # 把配置文件加载到os.environ里面，这确实是个骚操作呀
+    closest = closest_scrapy_cfg()  # 从此处开始，递归查找父级元素，直至找到或者报错
     if closest:
         projdir = os.path.dirname(closest)  # 获取项目路径
         if set_syspath and projdir not in sys.path:  # 如果项目路径不在sys.path里面，也就是python的运行环境，则加载进python的运行环境
-            sys.path.append(projdir)
+            sys.path.append(projdir)  # 这里是不是就是相当于pycharm的make_source_root，把项目加载到路径中
 
 
 def get_config(use_closest=True):

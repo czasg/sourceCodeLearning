@@ -60,7 +60,7 @@ def data_path(path, createdir=False):
 def get_project_settings():
     if ENVVAR not in os.environ:  # ENVVAR = 'SCRAPY_SETTINGS_MODULE'
         project = os.environ.get('SCRAPY_PROJECT', 'default')  # 似乎都是default
-        init_env(project)  # 将scrapy.cfg模块加载到os.environ环境里面，名字叫SCRAPY_SETTINGS_MODULE
+        init_env(project)  # 将scrapy.cfg模块加载到os.environ环境里面，名字叫SCRAPY_SETTINGS_MODULE  -- # SCRAPY_SETTINGS_MODULE -> os.environ  project -> sys.path
 
     settings = Settings()  # 实例一个Settings管理对象
     settings_module_path = os.environ.get(ENVVAR)  # 获取上一步获取的os.environ

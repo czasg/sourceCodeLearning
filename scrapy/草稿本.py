@@ -1,15 +1,13 @@
-import pkg_resources
-
-
-def run_entry_point(data):
-    group = 'package?'
-    for entrypoint in pkg_resources.iter_entry_points(group=group):
-        print('entrypoint:', entrypoint)
-        plugin = entrypoint.load()
-        plugin(data)
-
-run_entry_point(100)
-
+import os, sys, re
+import six
+import collections
+from collections.abc import MutableMapping, Mapping
+# from scrapy.settings import Settings
+def hello():
+    print('hello')
+if __name__ == '__main__':
+    print({}.setdefault('key', 'value'))
+    ...
 """
 engine_started = object()               # 在引擎正式启动，也就是爬虫crawl里执行yield engine.start时发送此信号
 engine_stopped = object()               # 引擎正式关闭，
@@ -26,8 +24,8 @@ item_scraped = object()
 item_dropped = object()
 item_error = object()
 """
-
 """
+from twisted.internet import task
 当你想要强制关闭爬虫的时候，可以主动捕获signal，来进行对应的处理。如：
     crawler.signals.connect(self.spider_closed, signal=signals.spider_closed)  # 主要绑定spider_closed信号
     def spider_closed(self, spider):
@@ -43,7 +41,12 @@ item_error = object()
         if self.task and self.task.running:
             self.task.stop()
 
+"EXTENSIONS": {'ShutDownCaptcha': 4}
 编写extensions拓展模块，需要实例化一个from_crawler进行初始化，init中可以绑定相关属性
 你甚至可以主动触发引擎的关闭机制，如下：
 self.crawler.engine.close_spider(spider, "shutdown by ShutDownNews extension")
+"""
+"""
+test = 'test_code'
+isinstance(test, collections.abc.Sized)  # Sized判断是否有长度的意思嘛
 """

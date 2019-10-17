@@ -60,7 +60,7 @@ class SpiderLoader(object):
     def from_settings(cls, settings):  # 首先from_settings创建实例
         return cls(settings)
 
-    def load(self, spider_name):
+    def load(self, spider_name):  # 这里的load加载是单独的一个爬虫
         """
         Return the Spider class for the given spider name. If the spider
         name is not found, raise a KeyError.

@@ -38,7 +38,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                 assert response is None or isinstance(response, (Response, Request)), \
                         'Middleware %s.process_request must return None, Response or Request, got %s' % \
                         (six.get_method_self(method).__class__.__name__, response.__class__.__name__)  # 规定返回类型，None，response，request这三种
-                if response:
+                if response:  # 如果是空，则会继续处理所有的中间件，但是一旦不是了，就会提前跑路，对，应该就是这个意思，可以很骚
                     defer.returnValue(response)
             defer.returnValue((yield download_func(request=request,spider=spider)))
 

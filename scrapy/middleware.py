@@ -32,7 +32,7 @@ class MiddlewareManager(object):
         for clspath in mwlist:
             try:
                 mwcls = load_object(clspath)
-                mw = create_instance(mwcls, settings, crawler)  # 执行中间件的from_crawler，没有就from_setting，最后还没有直接实例化
+                mw = create_instance(mwcls, settings, crawler)  # 执行from_crawler或者from_settings，已经是创建实例了
                 middlewares.append(mw)  # 中间件列表哦
                 enabled.append(clspath)
             except NotConfigured as e:

@@ -30,7 +30,7 @@ class CallLaterOnce(object):
 
     def schedule(self, delay=0):
         if self._call is None:
-            self._call = reactor.callLater(delay, self)
+            self._call = reactor.callLater(delay, self)  # 赋值给自己的_call，立即执行自己时没回清空自己的_call，然后再执行对应的func
 
     def cancel(self):
         if self._call:

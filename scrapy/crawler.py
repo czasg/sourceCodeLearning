@@ -27,13 +27,14 @@ logger = logging.getLogger(__name__)
 class Crawler(object):
 
     def __init__(self, spidercls, settings=None):
-        if isinstance(settings, dict) or settings is None:
+        if isinstance(settings, dict) or settings is None: # 此处应该直接就是一个False
             settings = Settings(settings)
 
         self.spidercls = spidercls  # 获取了爬虫对象，，但是还是没有实例化  # 所以流程就是获取爬虫对象，在实例化之前，执行了一次update_settings，就是针对custom setting的一次操作嘛
         self.settings = settings.copy()
         self.spidercls.update_settings(self.settings)  # 就是在这里执行了对custom_setting的设置嘛，可以很强，把爬虫里面的custom_setting更新到setting里面?好吧没事共同维护的一个setting对象，确实是直接更新到了setting里面
         # 所以在实例化之前，他只是更新了settings而已，你写在__init__其实一点用都得的，根本就没有执行到哪一步
+        # todo 总结。我以前是想把custiom_settings卸载init里面，但是并没有起作用，因为此时的爬虫也就是 self.spidercls 根本就还没有进行初始化，而是先执行的update_settings
         d = dict(overridden_settings(self.settings))  # 找出相同的，取overridden里面的值
         logger.info("Overridden settings: %(settings)r", {'settings': d})  # 这就是打印那句log的地方，打印出Overridden属性。现遍历默认属性，找出已有属性中对应的值，看那些有修改
 
@@ -52,7 +53,7 @@ class Crawler(object):
 
         lf_cls = load_object(self.settings['LOG_FORMATTER'])   # LOG_FORMATTER = 'scrapy.logformatter.LogFormatter'
         self.logformatter = lf_cls.from_crawler(self)
-        self.extensions = ExtensionManager.from_crawler(self)
+        self.extensions = ExtensionManager.from_crawler(self)  # extensions是干嘛用的，杵这干啥呢，闹呢。卧槽，貌似不需要使用这些扩展件呀
 
         self.settings.freeze()
         self.crawling = False
@@ -172,8 +173,8 @@ class CrawlerRunner(object):
         return self._crawl(crawler, *args, **kwargs)
 
     def _crawl(self, crawler, *args, **kwargs):
-        self.crawlers.add(crawler)
-        d = crawler.crawl(*args, **kwargs)
+        self.crawlers.add(crawler)  # 把name爬虫加载进crawlers属性中去了
+        d = crawler.crawl(*args, **kwargs)  # 调用爬虫的crawl方法，获取一个defer对象
         self._active.add(d)
 
         def _done(result):
@@ -200,7 +201,7 @@ class CrawlerRunner(object):
         return self._create_crawler(crawler_or_spidercls)
 
     def _create_crawler(self, spidercls):
-        if isinstance(spidercls, six.string_types):
+        if isinstance(spidercls, six.string_types):  # 这里是name，通过name加载对应的爬虫，很强
             spidercls = self.spider_loader.load(spidercls)  # 首次传入的是spider name，通过load加载。我去，首先会加载项目下所有爬虫，然后再单独加载某一爬虫嘛==僵硬啊
         return Crawler(spidercls, self.settings)  # 这里的spidercls，装的就是指定的爬虫吗
 
@@ -324,10 +325,10 @@ def _get_spider_loader(settings):
             category=ScrapyDeprecationWarning, stacklevel=2
         )
     cls_path = settings.get('SPIDER_MANAGER_CLASS',
-                            settings.get('SPIDER_LOADER_CLASS'))  # SPIDER_LOADER_CLASS = 'scrapy.spiderloader.SpiderLoader'
+                            settings.get('SPIDER_LOADER_CLASS'))  # SPIDER_LOADER_CLASS = 'scrapy.spiderloader.SpiderLoader'  # zty就是该的这里咯
     loader_cls = load_object(cls_path)
     try:
-        verifyClass(ISpiderLoader, loader_cls)
+        verifyClass(ISpiderLoader, loader_cls)  # 即使重写，也必须要是重ISpider接口竭诚的是吧
     except DoesNotImplement:
         warnings.warn(
             'SPIDER_LOADER_CLASS (previously named SPIDER_MANAGER_CLASS) does '
@@ -335,4 +336,4 @@ def _get_spider_loader(settings):
             'Please add all missing methods to avoid unexpected runtime errors.',
             category=ScrapyDeprecationWarning, stacklevel=2
         )
-    return loader_cls.from_settings(settings.frozencopy())  # 这是一个SpiderLoader对象的实例化
+    return loader_cls.from_settings(settings.frozencopy())  # 这是一个SpiderLoader对象的实例化  # 调用from_settings进行初始化

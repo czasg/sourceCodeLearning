@@ -24,19 +24,19 @@ class CloseSpider(object):
             'errorcount': crawler.settings.getint('CLOSESPIDER_ERRORCOUNT'),
             }
 
-        if not any(self.close_on.values()):
+        if not any(self.close_on.values()):  # 好吧，原来是不能全为0的意思
             raise NotConfigured
 
         self.counter = defaultdict(int)
 
         if self.close_on.get('errorcount'):
             crawler.signals.connect(self.error_count, signal=signals.spider_error)
-        if self.close_on.get('pagecount'):
-            crawler.signals.connect(self.page_count, signal=signals.response_received)
-        if self.close_on.get('timeout'):
-            crawler.signals.connect(self.spider_opened, signal=signals.spider_opened)
-        if self.close_on.get('itemcount'):
-            crawler.signals.connect(self.item_scraped, signal=signals.item_scraped)
+        # if self.close_on.get('pagecount'):  # 这三貌似都没得
+        #     crawler.signals.connect(self.page_count, signal=signals.response_received)
+        # if self.close_on.get('timeout'):
+        #     crawler.signals.connect(self.spider_opened, signal=signals.spider_opened)
+        # if self.close_on.get('itemcount'):
+        #     crawler.signals.connect(self.item_scraped, signal=signals.item_scraped)
         crawler.signals.connect(self.spider_closed, signal=signals.spider_closed)
 
     @classmethod
@@ -66,4 +66,8 @@ class CloseSpider(object):
     def spider_closed(self, spider):
         task = getattr(self, 'task', False)  # 我戳，这个task是指的什么玩意啊。好吧，原来是一个reactor.callLater
         if task and task.active():
-            task.cancel()
+            task.cancel()  # 不应该是task.stop吗
+
+
+if __name__ == '__main__':
+    print(any([10, 0, 0, 0]))

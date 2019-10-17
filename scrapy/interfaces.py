@@ -27,10 +27,10 @@ from zope.interface import implementer
 @implementer(ICzaSpider)
 class Test:
     def test1(self):print('test1')
-    def test2(self):print('test2')
+    # def test2(self):print('test2')
 
 
 if __name__ == '__main__':
     a = Test()
     a.test1()
-    a.test2()
+    # a.test2()

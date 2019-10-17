@@ -11,7 +11,7 @@ class StatsCollector(object): # spider.crawler.stats.inc_value("scanned/urls", c
 
     def __init__(self, crawler): # 一个统计源码
         self._dump = crawler.settings.getbool('STATS_DUMP')  # STATS_DUMP = True
-        self._stats = {}
+        self._stats = {}  # 所谓的统计模块，不还是用的字典嘛
 
     def get_value(self, key, default=None, spider=None):
         return self._stats.get(key, default)
