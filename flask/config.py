@@ -168,7 +168,7 @@ class Config(dict):
         """
         if isinstance(obj, string_types):
             obj = import_string(obj)
-        for key in dir(obj):
+        for key in dir(obj):  # 操作都是一样的，不过flask的更好看点呀
             if key.isupper():
                 self[key] = getattr(obj, key)
 

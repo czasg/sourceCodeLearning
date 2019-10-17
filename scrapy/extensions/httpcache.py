@@ -352,8 +352,8 @@ class FilesystemCacheStorage(object):
 class LeveldbCacheStorage(object):
 
     def __init__(self, settings):
-        import leveldb
-        self._leveldb = leveldb
+        # import leveldb
+        self._leveldb = None
         self.cachedir = data_path(settings['HTTPCACHE_DIR'], createdir=True)
         self.expiration_secs = settings.getint('HTTPCACHE_EXPIRATION_SECS')
         self.db = None

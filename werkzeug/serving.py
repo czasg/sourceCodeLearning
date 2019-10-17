@@ -286,11 +286,11 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             self.server.log('error', 'Error on request:\n%s',
                             traceback.plaintext)
 
-    def handle(self):
+    def handle(self):  # 这里的handle应该是主要的执行函数啊
         """Handles a request ignoring dropped connections."""
         rv = None
         try:
-            rv = BaseHTTPRequestHandler.handle(self)
+            rv = BaseHTTPRequestHandler.handle(self)  # 僵硬，super().handle(self)
         except (socket.error, socket.timeout) as e:
             self.connection_dropped(e)
         except Exception:
@@ -555,7 +555,7 @@ def get_sockaddr(host, port, family):
     return res[0][4]
 
 
-class BaseWSGIServer(HTTPServer, object):
+class BaseWSGIServer(HTTPServer, object):  # 没想到啊没想到，BaseWSGI居然是基于HttpServer这个类的，那可真是太巧了啊
 
     """Simple single-threaded, single-process WSGI server."""
     multithread = False
@@ -609,7 +609,7 @@ class BaseWSGIServer(HTTPServer, object):
     def serve_forever(self):
         self.shutdown_signal = False
         try:
-            HTTPServer.serve_forever(self)  # 永远开启???我就当时挂起了一个服务好吧
+            HTTPServer.serve_forever(self)  # 调用父类的方法咯，为啥喜欢用这种写法呢
         except KeyboardInterrupt:
             pass
         finally:
