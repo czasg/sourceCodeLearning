@@ -16,3 +16,5 @@ __cake__ = u'\u2728 \U0001f370 \u2728'
 
 if __name__ == '__main__':
     import urllib.request
+    print(urllib.request.urlopen('http://www.baidu.com').read())
+    # urlopen -> http.client.HTTPConnection -> socket.create_connection => socket.socket() + socket.connect()
