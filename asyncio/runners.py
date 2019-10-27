@@ -29,7 +29,7 @@ def run(main, *, debug=False):
 
         asyncio.run(main())
     """
-    if events._get_running_loop() is not None:
+    if events._get_running_loop() is not None:  # 如果有正在执行的，抛出异常
         raise RuntimeError(
             "asyncio.run() cannot be called from a running event loop")
 

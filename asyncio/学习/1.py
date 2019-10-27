@@ -4,23 +4,27 @@ import socket
 import selectors
 import socketserver
 
-loop = asyncio.new_event_loop()
-selector = selectors.DefaultSelector()
+# loop = asyncio.new_event_loop()
 
 
-def selector_loop():
-    while True:
-        for sock, mask in selector.select():
-            pass
+# loop = asyncio.get_event_loop()
 
 
-class _RunningLoop(threading.local):
-    loop_pid = (None, None)
+async def test():
+    await asyncio.sleep(2)
+    print('hello')
 
 
-_running_loop = _RunningLoop()
+async def main():
+    await asyncio.gather(*[
+        asyncio.create_task(test()),
+        # asyncio.create_task(test()),
+        # asyncio.create_task(test()),
+        # asyncio.create_task(test()),
+    ])
+
 
 if __name__ == '__main__':
-    sock = socket.socket()
-    print(_running_loop.loop_pid)
-    selector_loop()
+    # loop.run_until_complete(test())
+    # asyncio.run(test())
+    asyncio.run(main())

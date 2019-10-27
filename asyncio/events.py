@@ -717,7 +717,7 @@ def _init_event_loop_policy():
     with _lock:
         if _event_loop_policy is None:  # pragma: no branch
             from . import DefaultEventLoopPolicy
-            _event_loop_policy = DefaultEventLoopPolicy()
+            _event_loop_policy = DefaultEventLoopPolicy()  # asyncio.windows_events.WindowsSelectorEventLoopPolicy
 
 
 def get_event_loop_policy():

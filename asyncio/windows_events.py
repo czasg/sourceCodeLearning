@@ -830,7 +830,7 @@ SelectorEventLoop = _WindowsSelectorEventLoop
 
 
 class WindowsSelectorEventLoopPolicy(events.BaseDefaultEventLoopPolicy):
-    _loop_factory = SelectorEventLoop
+    _loop_factory = SelectorEventLoop  # new_event_loop -> self._loop_factory() -> SelectorEventLoop()
 
 
 class WindowsProactorEventLoopPolicy(events.BaseDefaultEventLoopPolicy):
