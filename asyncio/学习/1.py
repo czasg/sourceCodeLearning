@@ -16,11 +16,18 @@ async def test():
 
 
 async def main():
+    try:
+        await asyncio.wait_for(test(), 1)
+    except asyncio.TimeoutError:
+        print('TimeoutError')
     await asyncio.gather(*[
-        asyncio.create_task(test()),
         # asyncio.create_task(test()),
         # asyncio.create_task(test()),
         # asyncio.create_task(test()),
+        # asyncio.create_task(test()),
+        test(),
+        test(),
+        test(),
     ])
 
 
