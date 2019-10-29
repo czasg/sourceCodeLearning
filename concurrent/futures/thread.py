@@ -76,12 +76,16 @@ def _worker(executor_reference, work_queue, initializer, initargs):
     try:
         while True:
             work_item = work_queue.get(block=True)
+            # print('打印8次才对', work_item)
             if work_item is not None:
-                work_item.run()
+                # print('应该会阻塞在这里把')
+                work_item.run()  # 这里是一个阻塞的没问题把
+                # print('线程执行完了')
                 # Delete references to object. See issue16284
                 del work_item
-                continue
-            executor = executor_reference()
+                continue  # 就是说如果这个线程立即执行完了可以继续获取，而不需要再开线程。可以的。
+            executor = executor_reference()  # work_item is None
+            # print('走到这面来了')  # 每一个线程都会走到这里来
             # Exit if:
             #   - The interpreter is shutting down OR
             #   - The executor that owns the worker has been collected OR
@@ -89,10 +93,11 @@ def _worker(executor_reference, work_queue, initializer, initargs):
             if _shutdown or executor is None or executor._shutdown:
                 # Flag the executor as shutting down as early as possible if it
                 # is not gc-ed yet.
+                # print(_shutdown, executor, executor._shutdown)  # executor._shutdown -> True
                 if executor is not None:
                     executor._shutdown = True
                 # Notice other workers
-                work_queue.put(None)
+                work_queue.put(None)  # 几个线程就执行几次。一定会有第一个跑到此处然后结束。然后递归结束。
                 return
             del executor
     except BaseException:
@@ -143,7 +148,7 @@ class ThreadPoolExecutor(_base.Executor):
         self._initargs = initargs
 
     def submit(self, fn, *args, **kwargs):
-        with self._shutdown_lock:
+        with self._shutdown_lock:  # 确实是每一个都上锁操作。但是这力是非阻塞的
             if self._broken:
                 raise BrokenThreadPool(self._broken)
 
@@ -154,9 +159,9 @@ class ThreadPoolExecutor(_base.Executor):
                                    'interpreter shutdown')
 
             f = _base.Future()
-            w = _WorkItem(f, fn, args, kwargs)
+            w = _WorkItem(f, fn, args, kwargs)  # 啥也没敢，就是保存放到一起而已
 
-            self._work_queue.put(w)
+            self._work_queue.put(w)  # == 这个有一个queue，不会这么巧把，就是构造数据然后把数据推到队列中吗
             self._adjust_thread_count()
             return f
     submit.__doc__ = _base.Executor.submit.__doc__
@@ -177,7 +182,7 @@ class ThreadPoolExecutor(_base.Executor):
                                        self._work_queue,
                                        self._initializer,
                                        self._initargs))
-            t.daemon = True
+            t.daemon = True  # 居然设置为了守护进程
             t.start()
             self._threads.add(t)
             _threads_queues[t] = self._work_queue
@@ -198,7 +203,8 @@ class ThreadPoolExecutor(_base.Executor):
     def shutdown(self, wait=True):
         with self._shutdown_lock:
             self._shutdown = True
-            self._work_queue.put(None)
+            # print('不会是这里把')  # 原来还真是在结束前走的这里
+            self._work_queue.put(None)  # 传入一个空，然后空的会继续不同的往里面put值，直至所有完成
         if wait:
             for t in self._threads:
                 t.join()

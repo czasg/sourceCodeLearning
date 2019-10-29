@@ -76,9 +76,9 @@ class _AsCompletedWaiter(_Waiter):
         self.lock = threading.Lock()
 
     def add_result(self, future):
-        with self.lock:
+        with self.lock:  # 执行时获取锁
             super(_AsCompletedWaiter, self).add_result(future)
-            self.event.set()
+            self.event.set()  # 这又是啥意思，with上下文管理器结束后不是会自动释放线程锁的嘛.  设置为True?????为啥
 
     def add_exception(self, future):
         with self.lock:

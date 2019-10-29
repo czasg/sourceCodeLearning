@@ -594,7 +594,7 @@ class ProcessPoolExecutor(_base.Executor):
             self._processes[p.pid] = p
 
     def submit(self, fn, *args, **kwargs):
-        with self._shutdown_lock:
+        with self._shutdown_lock:  # 获取线程锁
             if self._broken:
                 raise BrokenProcessPool(self._broken)
             if self._shutdown_thread:
