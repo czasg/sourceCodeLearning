@@ -42,14 +42,14 @@ def _python_exit():
 atexit.register(_python_exit)
 
 
-class _WorkItem(object):
+class _WorkItem(object):  # 推入队列的实际对象
     def __init__(self, future, fn, args, kwargs):
         self.future = future
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
 
-    def run(self):
+    def run(self):  # 执行时，调用注册函数。然后调用未来对象设置函数结果
         if not self.future.set_running_or_notify_cancel():
             return
 
@@ -84,7 +84,7 @@ def _worker(executor_reference, work_queue, initializer, initargs):
                 # Delete references to object. See issue16284
                 del work_item
                 continue  # 就是说如果这个线程立即执行完了可以继续获取，而不需要再开线程。可以的。
-            executor = executor_reference()  # work_item is None
+            executor = executor_reference()  # 获取弱引用
             # print('走到这面来了')  # 每一个线程都会走到这里来
             # Exit if:
             #   - The interpreter is shutting down OR
@@ -147,7 +147,7 @@ class ThreadPoolExecutor(_base.Executor):
         self._initializer = initializer
         self._initargs = initargs
 
-    def submit(self, fn, *args, **kwargs):
+    def submit(self, fn, *args, **kwargs):  # 每创建一个submit，都是会创建一个新的线程
         with self._shutdown_lock:  # 确实是每一个都上锁操作。但是这力是非阻塞的
             if self._broken:
                 raise BrokenThreadPool(self._broken)
@@ -159,9 +159,9 @@ class ThreadPoolExecutor(_base.Executor):
                                    'interpreter shutdown')
 
             f = _base.Future()
-            w = _WorkItem(f, fn, args, kwargs)  # 啥也没敢，就是保存放到一起而已
+            w = _WorkItem(f, fn, args, kwargs)  # 实际工作对象
 
-            self._work_queue.put(w)  # == 这个有一个queue，不会这么巧把，就是构造数据然后把数据推到队列中吗
+            self._work_queue.put(w)  # 每一次submit都会将实际工作对象推入队列中
             self._adjust_thread_count()
             return f
     submit.__doc__ = _base.Executor.submit.__doc__

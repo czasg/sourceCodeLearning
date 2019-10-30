@@ -604,10 +604,10 @@ class Executor(object):
         """
         pass
 
-    def __enter__(self):
+    def __enter__(self):  # 实例化的时候啥也没做，直接返回实例化对象
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # 结束时执行__exit__函数
         self.shutdown(wait=True)
         return False
 
