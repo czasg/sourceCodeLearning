@@ -471,7 +471,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         """
         raise NotImplementedError
 
-    def _process_events(self, event_list):
+    def _process_events(self, event_list):  # 处理时间的具体方法。待实现
         """Process selector events."""
         raise NotImplementedError
 
@@ -534,9 +534,9 @@ class BaseEventLoop(events.AbstractEventLoop):
         sys.set_asyncgen_hooks(firstiter=self._asyncgen_firstiter_hook,
                                finalizer=self._asyncgen_finalizer_hook)
         try:
-            events._set_running_loop(self)
+            events._set_running_loop(self)  # 原来是在run_forever这里对_running_loop进行赋值的呀
             while True:
-                self._run_once()
+                self._run_once()  # 关键点
                 if self._stopping:
                     break
         finally:
@@ -1715,9 +1715,9 @@ class BaseEventLoop(events.AbstractEventLoop):
             when = self._scheduled[0]._when
             timeout = min(max(0, when - self.time()), MAXIMUM_SELECT_TIMEOUT)
 
-        if self._debug and timeout != 0:
+        if self._debug and timeout != 0:  # 调试模式。打印一些时间是把。想法很骚，很强
             t0 = self.time()
-            event_list = self._selector.select(timeout)
+            event_list = self._selector.select(timeout)  # 哈哈，又被我找到了_selector，但是是在哪里赋值的呢
             dt = self.time() - t0
             if dt >= 1.0:
                 level = logging.INFO

@@ -28,7 +28,7 @@ _FINISHED = base_futures._FINISHED
 
 STACK_DEBUG = logging.DEBUG - 1  # heavy-duty debugging
 
-
+# 这个未来对象总体来说，还是装了未来值，然后使用回调处理。逻辑差不多吧
 class Future:
     """This class is *almost* compatible with concurrent.futures.Future.
 
@@ -134,7 +134,7 @@ class Future:
         self.__schedule_callbacks()
         return True
 
-    def __schedule_callbacks(self):
+    def __schedule_callbacks(self):  # 就是调度一次回调函数咯
         """Internal: Ask the event loop to call all callbacks.
 
         The callbacks are scheduled to be called as soon as possible. Also
@@ -144,9 +144,9 @@ class Future:
         if not callbacks:
             return
 
-        self._callbacks[:] = []
+        self._callbacks[:] = []  # 可以，又涨知识了。直接在原内存的基础上进行操作。赋值为空表
         for callback, ctx in callbacks:
-            self._loop.call_soon(callback, self, context=ctx)
+            self._loop.call_soon(callback, self, context=ctx)  # call_soon ??? 立即执行的意思嘛
 
     def cancelled(self):
         """Return True if the future was cancelled."""
@@ -193,23 +193,23 @@ class Future:
         self.__log_traceback = False
         return self._exception
 
-    def add_done_callback(self, fn, *, context=None):
+    def add_done_callback(self, fn, *, context=None):  # 添加回调函数
         """Add a callback to be run when the future becomes done.
 
         The callback is called with a single argument - the future object. If
         the future is already done when this is called, the callback is
         scheduled with call_soon.
         """
-        if self._state != _PENDING:
+        if self._state != _PENDING:  # 只要函数不是在等待状态，则立即执行
             self._loop.call_soon(fn, self, context=context)
         else:
             if context is None:
                 context = contextvars.copy_context()
-            self._callbacks.append((fn, context))
+            self._callbacks.append((fn, context))  # 原来如此。回调里面装的是一个tuple。回调函数 + 上下文
 
     # New method not in PEP 3148.
 
-    def remove_done_callback(self, fn):
+    def remove_done_callback(self, fn):  # 可以，讲道理这样速度是会快一些呀
         """Remove all instances of a callback from the "call when done" list.
 
         Returns the number of callbacks removed.
@@ -219,7 +219,7 @@ class Future:
                               if f != fn]
         removed_count = len(self._callbacks) - len(filtered_callbacks)
         if removed_count:
-            self._callbacks[:] = filtered_callbacks
+            self._callbacks[:] = filtered_callbacks  # 卧槽。牛皮。直接就是不操作列表了，遍历出所需要的列表然后重新赋值。这样是不是会快一些啊
         return removed_count
 
     # So-called internal methods (note: no set_running_or_notify_cancel()).
@@ -234,7 +234,7 @@ class Future:
             raise InvalidStateError('{}: {!r}'.format(self._state, self))
         self._result = result
         self._state = _FINISHED
-        self.__schedule_callbacks()
+        self.__schedule_callbacks()  # 添加结果并执行一次调度
 
     def set_exception(self, exception):
         """Mark the future done and set an exception.
@@ -254,7 +254,7 @@ class Future:
         self.__schedule_callbacks()
         self.__log_traceback = True
 
-    def __await__(self):
+    def __await__(self):  # 这里就是如此。先yield本尊，然后再return目标结果
         if not self.done():
             self._asyncio_future_blocking = True
             yield self  # This tells Task to wait for completion.

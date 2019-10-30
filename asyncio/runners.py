@@ -38,12 +38,12 @@ def run(main, *, debug=False):
 
     loop = events.new_event_loop()
     try:
-        events.set_event_loop(loop)
+        events.set_event_loop(loop)  # 这两步 == events.get_event_loop
         loop.set_debug(debug)
         return loop.run_until_complete(main)
     finally:
         try:
-            _cancel_all_tasks(loop)
+            _cancel_all_tasks(loop)  # 执行run比直接使用 loop.run_until_complete(main) 要好一些，处理异常都干净些
             loop.run_until_complete(loop.shutdown_asyncgens())
         finally:
             events.set_event_loop(None)

@@ -39,7 +39,7 @@ def _test_selector_event(selector, fd, event):
         return bool(key.events & event)
 
 
-class BaseSelectorEventLoop(base_events.BaseEventLoop):
+class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体的事件循环loop
     """Selector event loop.
 
     See events.EventLoop for API specification.
@@ -51,7 +51,7 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):
         if selector is None:
             selector = selectors.DefaultSelector()
         logger.debug('Using selector: %s', selector.__class__.__name__)
-        self._selector = selector
+        self._selector = selector  # 找到了。在这里进行赋值的selector
         self._make_self_pipe()
         self._transports = weakref.WeakValueDictionary()
 
@@ -544,7 +544,7 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):
                 transp.resume_reading()
             self._transports[transp._sock_fd] = transp
 
-    def _process_events(self, event_list):
+    def _process_events(self, event_list):  # 关键函数点。处理events事件
         for key, mask in event_list:
             fileobj, (reader, writer) = key.fileobj, key.data
             if mask & selectors.EVENT_READ and reader is not None:

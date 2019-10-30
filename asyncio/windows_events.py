@@ -296,7 +296,7 @@ class PipeServer(object):
     __del__ = close
 
 
-class _WindowsSelectorEventLoop(selector_events.BaseSelectorEventLoop):
+class _WindowsSelectorEventLoop(selector_events.BaseSelectorEventLoop):  # 是这个！！！！
     """Windows version of selector event loop."""
 
 
@@ -831,10 +831,11 @@ SelectorEventLoop = _WindowsSelectorEventLoop
 
 class WindowsSelectorEventLoopPolicy(events.BaseDefaultEventLoopPolicy):
     _loop_factory = SelectorEventLoop  # new_event_loop -> self._loop_factory() -> SelectorEventLoop()
+    # 来了来了。我们的事件循环loop就是上面 SelectorEventLoop 的实例化！
 
 
 class WindowsProactorEventLoopPolicy(events.BaseDefaultEventLoopPolicy):
     _loop_factory = ProactorEventLoop
 
 
-DefaultEventLoopPolicy = WindowsSelectorEventLoopPolicy
+DefaultEventLoopPolicy = WindowsSelectorEventLoopPolicy  # 从这里进。调用此处

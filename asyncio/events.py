@@ -207,7 +207,7 @@ class AbstractServer:
         await self.wait_closed()
 
 
-class AbstractEventLoop:
+class AbstractEventLoop:  # 总算是找到起点了。定义事件的抽象接口.....这个接口是有点多呀.
     """Abstract event loop."""
 
     # Running and stopping the event loop.
@@ -572,7 +572,7 @@ class AbstractEventLoop:
     def set_debug(self, enabled):
         raise NotImplementedError
 
-
+# AbstractEventLoopPolicy定义协议标准 get_event_loop / set_event_loop / new_event_loop / get_child_watcher / set_child_watcher
 class AbstractEventLoopPolicy:
     """Abstract policy for accessing the event loop."""
 
@@ -620,24 +620,24 @@ class BaseDefaultEventLoopPolicy(AbstractEventLoopPolicy):
     associated).
     """
 
-    _loop_factory = None
+    _loop_factory = None  # 这个就很关键了。就是实例化此处获取事件循环loop的。剩下的就是一些初始化，无伤大雅
 
-    class _Local(threading.local):
+    class _Local(threading.local):  # 这样就可以指定某几个属性嘛，很强！
         _loop = None
         _set_called = False
 
     def __init__(self):
-        self._local = self._Local()
+        self._local = self._Local()  # 定义threading.local全局变量。各线程维护各自变量
 
-    def get_event_loop(self):
+    def get_event_loop(self):  # 显然get_event_loop是强于自己组合的呀
         """Get the event loop.
 
         This may be None or an instance of EventLoop.
         """
         if (self._local._loop is None and
                 not self._local._set_called and
-                isinstance(threading.current_thread(), threading._MainThread)):
-            self.set_event_loop(self.new_event_loop())
+                isinstance(threading.current_thread(), threading._MainThread)):  # 需要在主线程挂起是吧
+            self.set_event_loop(self.new_event_loop())  # 可以，果然是这一套。
 
         if self._local._loop is None:
             raise RuntimeError('There is no current event loop in thread %r.'

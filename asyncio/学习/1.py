@@ -1,37 +1,29 @@
-import threading
-import asyncio
-import socket
-import selectors
-import socketserver
-
-# loop = asyncio.new_event_loop()
-
-
-# loop = asyncio.get_event_loop()
-
-
-async def test():
-    await asyncio.sleep(2)
-    print('hello')
+def gen_data():
+    total = 0
+    count = 0
+    data = True
+    while data:
+        data = yield data
+        total += data
+        count += 1
+    return total / count
 
 
-async def main():
-    try:
-        await asyncio.wait_for(test(), 1)
-    except asyncio.TimeoutError:
-        print('TimeoutError')
-    await asyncio.gather(*[
-        # asyncio.create_task(test()),
-        # asyncio.create_task(test()),
-        # asyncio.create_task(test()),
-        # asyncio.create_task(test()),
-        test(),
-        test(),
-        test(),
-    ])
+
+def middle(result, key):
+    while True:
+        result[key] = yield from gen_data()
+
+
+def main(data):
+    result = {}
+    for key, value in data.items():
+        mid = middle(result, key)
+        mid.send(None)
 
 
 if __name__ == '__main__':
-    # loop.run_until_complete(test())
-    # asyncio.run(test())
-    asyncio.run(main())
+    data = {
+        'cza': [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 222, 3345]
+    }
+    main(data)
