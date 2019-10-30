@@ -52,7 +52,7 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
             selector = selectors.DefaultSelector()
         logger.debug('Using selector: %s', selector.__class__.__name__)
         self._selector = selector  # 找到了。在这里进行赋值的selector
-        self._make_self_pipe()
+        self._make_self_pipe()  # 在此处执行了一次_make_self_pipe
         self._transports = weakref.WeakValueDictionary()
 
     def _make_socket_transport(self, sock, protocol, waiter=None, *,
@@ -246,7 +246,7 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
 
     def _add_reader(self, fd, callback, *args):
         self._check_closed()
-        handle = events.Handle(callback, args, self, None)
+        handle = events.Handle(callback, args, self, None)  # 在此处构造一个handle对象
         try:
             key = self._selector.get_key(fd)
         except KeyError:
@@ -285,9 +285,9 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
         handle = events.Handle(callback, args, self, None)
         try:
             key = self._selector.get_key(fd)
-        except KeyError:
+        except KeyError:  # 原来如此。居然还利用报错来实现功能，操！
             self._selector.register(fd, selectors.EVENT_WRITE,
-                                    (None, handle))
+                                    (None, handle))  # 当事件可写的时候。触发回调，返回这里的handle
         else:
             mask, (reader, writer) = key.events, key.data
             self._selector.modify(fd, mask | selectors.EVENT_WRITE,
@@ -546,7 +546,7 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
 
     def _process_events(self, event_list):  # 关键函数点。处理events事件
         for key, mask in event_list:
-            fileobj, (reader, writer) = key.fileobj, key.data
+            fileobj, (reader, writer) = key.fileobj, key.data  # data里面怎么传入的是这两个呀
             if mask & selectors.EVENT_READ and reader is not None:
                 if reader._cancelled:
                     self._remove_reader(fileobj)

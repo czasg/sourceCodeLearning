@@ -155,7 +155,7 @@ def _ipaddr_info(host, port, family, type, proto):
     return None
 
 
-def _run_until_complete_cb(fut):
+def _run_until_complete_cb(fut):  # 未来对象的回调函数
     if not fut.cancelled():
         exc = fut.exception()
         if isinstance(exc, BaseException) and not isinstance(exc, Exception):
@@ -536,7 +536,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         try:
             events._set_running_loop(self)  # 原来是在run_forever这里对_running_loop进行赋值的呀
             while True:
-                self._run_once()  # 关键点
+                self._run_once()  # 关键点。会开在这不停的轮询是吧
                 if self._stopping:
                     break
         finally:
@@ -546,7 +546,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             self._set_coroutine_origin_tracking(False)
             sys.set_asyncgen_hooks(*old_agen_hooks)
 
-    def run_until_complete(self, future):
+    def run_until_complete(self, future):  # 事件循环看这里。看到上面去了。上面是挂起一个Server
         """Run until the Future is done.
 
         If the argument is a coroutine, it is wrapped in a Task.
@@ -568,7 +568,7 @@ class BaseEventLoop(events.AbstractEventLoop):
 
         future.add_done_callback(_run_until_complete_cb)
         try:
-            self.run_forever()
+            self.run_forever()  # 还是要执行这里...
         except:
             if new_task and future.done() and not future.cancelled():
                 # The coroutine raised a BaseException. Consume the exception
@@ -1665,6 +1665,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             return
         assert not isinstance(handle, events.TimerHandle)
         self._ready.append(handle)
+        print(handle)
 
     def _add_callback_signalsafe(self, handle):
         """Like _add_callback() but called from a signal handler."""
@@ -1685,6 +1686,8 @@ class BaseEventLoop(events.AbstractEventLoop):
         """
 
         sched_count = len(self._scheduled)
+        # print(self._scheduled)  # TimerHandle???
+        # print(sched_count)
         if (sched_count > _MIN_SCHEDULED_TIMER_HANDLES and
             self._timer_cancelled_count / sched_count >
                 _MIN_CANCELLED_TIMER_HANDLES_FRACTION):
@@ -1703,6 +1706,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         else:
             # Remove delayed calls that were cancelled from head of queue.
             while self._scheduled and self._scheduled[0]._cancelled:
+                # 暂时没走这里
                 self._timer_cancelled_count -= 1
                 handle = heapq.heappop(self._scheduled)
                 handle._scheduled = False
@@ -1737,7 +1741,8 @@ class BaseEventLoop(events.AbstractEventLoop):
                            timeout * 1e3, dt * 1e3)
         else:
             event_list = self._selector.select(timeout)
-        self._process_events(event_list)
+            # print(event_list)
+        self._process_events(event_list)  # 这里对event事件进行处理
 
         # Handle 'later' callbacks that are ready.
         end_time = self.time() + self._clock_resolution
@@ -1757,14 +1762,15 @@ class BaseEventLoop(events.AbstractEventLoop):
         # Use an idiom that is thread-safe without using locks.
         ntodo = len(self._ready)
         for i in range(ntodo):
-            handle = self._ready.popleft()
+            handle = self._ready.popleft()  # 在_process_events中传入handle函数，然后在此处调用处理事件
+            # print(handle)
             if handle._cancelled:
                 continue
             if self._debug:
                 try:
                     self._current_handle = handle
                     t0 = self.time()
-                    handle._run()
+                    handle._run()  # handle是个啥东西呀，咋还有一个_run方法
                     dt = self.time() - t0
                     if dt >= self.slow_callback_duration:
                         logger.warning('Executing %s took %.3f seconds',

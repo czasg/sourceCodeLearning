@@ -269,7 +269,7 @@ class Future:
 _PyFuture = Future
 
 
-def _get_loop(fut):
+def _get_loop(fut):  # 未来对象的回调函数。
     # Tries to call Future.get_loop() if it's available.
     # Otherwise fallbacks to using the old '_loop' property.
     try:

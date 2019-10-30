@@ -36,7 +36,7 @@ class Handle:
                  '_source_traceback', '_repr', '__weakref__',
                  '_context')
 
-    def __init__(self, callback, args, loop, context=None):
+    def __init__(self, callback, args, loop, context=None):  # 包装回调函数、事件循环。用于统一调度执行
         if context is None:
             context = contextvars.copy_context()
         self._context = context
@@ -85,6 +85,7 @@ class Handle:
 
     def _run(self):
         try:
+            # print(self._callback.__class__, self._callback)
             self._context.run(self._callback, *self._args)
         except Exception as exc:
             cb = format_helpers._format_callback_source(

@@ -1,0 +1,53 @@
+import asyncio
+import aiohttp
+
+
+async def test():
+    async with aiohttp.ClientSession() as session:
+        async with session.get('http://www.baidu.com') as response:
+            # print(await response.read())
+            ...
+
+
+async def main():
+    await asyncio.gather(
+        test(),
+        # test(),
+        # test(),
+    )
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
+
+# from contextvars import ContextVar, copy_context
+#
+# var = ContextVar('var')
+# var.set('spam')
+#
+# def main(a):
+#     print(a)
+#
+#     # 'var' was set to 'spam' before
+#     # calling 'copy_context()' and 'ctx.run(main)', so:
+#     # var.get() == ctx[var] == 'spam'
+#
+#     var.set('ham')
+#
+#     # Now, after setting 'var' to 'ham':
+#     # var.get() == ctx[var] == 'ham'
+#
+# ctx = copy_context()
+#
+# # Any changes that the 'main' function makes to 'var'
+# # will be contained in 'ctx'.
+# ctx.run(main, 'asd')
+#
+# # The 'main()' function was run in the 'ctx' context,
+# # so changes to 'var' are contained in it:
+# # ctx[var] == 'ham'
+# print(ctx[var])
+#
+# # However, outside of 'ctx', 'var' is still set to 'spam':
+# # var.get() == 'spam'
+# print(var.get())
