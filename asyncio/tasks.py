@@ -113,7 +113,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
         self._coro = coro
         self._context = contextvars.copy_context()
 
-        self._loop.call_soon(self.__step, context=self._context)
+        self._loop.call_soon(self.__step, context=self._context)  # 原来在这里。呵呵。执行的__step
         _register_task(self)
 
     def __del__(self):
@@ -211,7 +211,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
             if not isinstance(exc, futures.CancelledError):
                 exc = futures.CancelledError()
             self._must_cancel = False
-        coro = self._coro
+        coro = self._coro  # 第一次进来的函数就是main函数咯。第二次就是test咯
         self._fut_waiter = None
 
         _enter_task(self._loop, self)
@@ -220,7 +220,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
             if exc is None:
                 # We use the `send` method directly, because coroutines
                 # don't have `__iter__` and `__next__` methods.
-                result = coro.send(None)
+                result = coro.send(None)  # 终于来了是吧老贼。执行协程
             else:
                 result = coro.throw(exc)
         except StopIteration as exc:
@@ -287,7 +287,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
             _leave_task(self._loop, self)
             self = None  # Needed to break cycles when an exception occurs.
 
-    def __wakeup(self, future):
+    def __wakeup(self, future):  # 那么你就对应着wakeup是吧
         try:
             future.result()
         except Exception as exc:
@@ -307,13 +307,13 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
 _PyTask = Task
 
 
-try:
-    import _asyncio
-except ImportError:
-    pass
-else:
-    # _CTask is needed for tests.
-    Task = _CTask = _asyncio.Task
+# try:
+#     import _asyncio
+# except ImportError:
+#     pass
+# else:
+#     # _CTask is needed for tests.
+#     Task = _CTask = _asyncio.Task  # 居然用的是这里的task！
 
 
 def create_task(coro):
@@ -578,7 +578,7 @@ def ensure_future(coro_or_future, *, loop=None):
     if coroutines.iscoroutine(coro_or_future):
         if loop is None:
             loop = events.get_event_loop()
-        task = loop.create_task(coro_or_future)
+        task = loop.create_task(coro_or_future)  # 第一次进来是main。第二次进来是test
         if task._source_traceback:
             del task._source_traceback[-1]
         return task

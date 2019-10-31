@@ -370,7 +370,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         self._thread_id = None
         self._clock_resolution = time.get_clock_info('monotonic').resolution
         self._exception_handler = None
-        self.set_debug(coroutines._is_debug_mode())
+        self.set_debug(coroutines._is_debug_mode())  # 这个set_debug还做了点事哟
         # In debug mode, if the execution of a callback or a step of a task
         # exceed this duration in seconds, the slow callback/task is logged.
         self.slow_callback_duration = 0.1
@@ -402,7 +402,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         """
         self._check_closed()
         if self._task_factory is None:
-            task = tasks.Task(coro, loop=self)
+            task = tasks.Task(coro, loop=self)  # <Task pending coro=<main() + <Task pending coro=<test_for_sleep()
             if task._source_traceback:
                 del task._source_traceback[-1]
         else:
@@ -528,7 +528,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             raise RuntimeError(
                 'Cannot run the event loop while another loop is running')
         self._set_coroutine_origin_tracking(self._debug)
-        self._thread_id = threading.get_ident()
+        self._thread_id = threading.get_ident()  # 此时running=True
 
         old_agen_hooks = sys.get_asyncgen_hooks()
         sys.set_asyncgen_hooks(firstiter=self._asyncgen_firstiter_hook,
@@ -560,13 +560,13 @@ class BaseEventLoop(events.AbstractEventLoop):
         self._check_closed()
 
         new_task = not futures.isfuture(future)
-        future = tasks.ensure_future(future, loop=self)
+        future = tasks.ensure_future(future, loop=self)  # <Task pending coro=<main()
         if new_task:
             # An exception is raised if the future didn't complete, so there
             # is no need to log the "destroy pending task" message
             future._log_destroy_pending = False
 
-        future.add_done_callback(_run_until_complete_cb)
+        future.add_done_callback(_run_until_complete_cb)  # Task.add_done_callback
         try:
             self.run_forever()  # 还是要执行这里...
         except:
@@ -675,7 +675,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         timer._scheduled = True
         return timer
 
-    def call_soon(self, callback, *args, context=None):
+    def call_soon(self, callback, *args, context=None):  # 我日你大爷的。哪里调用的啊
         """Arrange for a callback to be called as soon as possible.
 
         This operates as a FIFO queue: callbacks are called in the
@@ -708,7 +708,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         handle = events.Handle(callback, args, self, context)
         if handle._source_traceback:
             del handle._source_traceback[-1]
-        self._ready.append(handle)
+        self._ready.append(handle)  # _ready里面第一次装有数据。是handle -> Task.__step
         return handle
 
     def _check_thread(self):
@@ -1797,7 +1797,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         self._coroutine_origin_tracking_enabled = enabled
 
     def get_debug(self):
-        return self._debug
+        return self._debug  # 谁调用的。怎么就走到这来了。
 
     def set_debug(self, enabled):
         self._debug = enabled

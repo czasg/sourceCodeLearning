@@ -8,12 +8,16 @@ async def test():
             # print(await response.read())
             ...
 
+async def test_for_sleep():
+    await asyncio.sleep(3)
+    print('hello')
+
 
 async def main():
     await asyncio.gather(
-        test(),
         # test(),
-        # test(),
+        # test_for_sleep(),
+        test_for_sleep(),
     )
 
 
