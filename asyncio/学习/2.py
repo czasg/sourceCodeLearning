@@ -1,24 +1,37 @@
 import asyncio
-import aiohttp
 
-
-async def test():
-    async with aiohttp.ClientSession() as session:
-        async with session.get('http://www.baidu.com') as response:
-            # print(await response.read())
-            ...
-
-async def test_for_sleep():
-    await asyncio.sleep(3)
-    print('hello')
-
+loop = asyncio.get_event_loop()
 
 async def main():
-    await asyncio.gather(
-        # test(),
-        # test_for_sleep(),
-        test_for_sleep(),
-    )
+    await asyncio.sleep(2)
+
+if __name__ == '__main__':
+    loop.run_until_complete(main())
+
+
+
+# import asyncio
+# import aiohttp
+#
+#
+# async def test():
+#     async with aiohttp.ClientSession() as session:
+#         async with session.get('http://www.baidu.com') as response:
+#             # print(await response.read())
+#             ...
+#
+# async def test_for_sleep():
+#     # await asyncio.sleep(3)
+#     print('hello')
+#
+#
+# async def main():
+#     print('hello')
+#     # await asyncio.gather(
+#     #     # test(),
+#     #     # test_for_sleep(),
+#     #     test_for_sleep(),
+#     # )
 
 
 if __name__ == '__main__':
