@@ -3,7 +3,7 @@ import asyncio
 loop = asyncio.get_event_loop()
 
 async def main():
-    await asyncio.sleep(2)
+    await asyncio.sleep(5)
 
 if __name__ == '__main__':
     loop.run_until_complete(main())
@@ -34,8 +34,8 @@ if __name__ == '__main__':
 #     # )
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+# if __name__ == '__main__':
+#     asyncio.run(main())
 
 # from contextvars import ContextVar, copy_context
 #

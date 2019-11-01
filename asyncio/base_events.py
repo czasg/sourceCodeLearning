@@ -1746,7 +1746,7 @@ class BaseEventLoop(events.AbstractEventLoop):
 
         # Handle 'later' callbacks that are ready.
         end_time = self.time() + self._clock_resolution
-        while self._scheduled:
+        while self._scheduled:  # 我靠。sleep到底是怎么实现的呀
             handle = self._scheduled[0]
             if handle._when >= end_time:
                 break
@@ -1762,7 +1762,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         # Use an idiom that is thread-safe without using locks.
         ntodo = len(self._ready)
         for i in range(ntodo):
-            handle = self._ready.popleft()  # 在_process_events中传入handle函数，然后在此处调用处理事件
+            handle = self._ready.popleft()
             # print(handle)
             if handle._cancelled:
                 continue
