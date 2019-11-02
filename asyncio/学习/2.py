@@ -2,11 +2,32 @@ import asyncio
 
 loop = asyncio.get_event_loop()
 
+async def test():
+    print('test')
+
 async def main():
-    await asyncio.sleep(5)
+    await asyncio.gather(
+        test(),
+        test(),
+    )
 
 if __name__ == '__main__':
     loop.run_until_complete(main())
+
+
+
+# import socket
+# import selectors
+# selector = selectors.DefaultSelector()
+# _ssock, _csock = socket.socketpair()
+# _ssock.setblocking(False)
+# _csock.setblocking(False)
+# selector.register(_ssock.fileno(), selectors.EVENT_READ, lambda x: x)
+# while True:
+#     a = selector.select(timeout=1)  # 这就是asyncio的超时机制。利用timeout来处理
+#     print(a)
+
+
 
 
 

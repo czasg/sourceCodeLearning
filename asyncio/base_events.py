@@ -1684,7 +1684,6 @@ class BaseEventLoop(events.AbstractEventLoop):
         schedules the resulting callbacks, and finally schedules
         'call_later' callbacks.
         """
-
         sched_count = len(self._scheduled)
         # print(self._scheduled)  # TimerHandle???
         # print(sched_count)
@@ -1740,15 +1739,14 @@ class BaseEventLoop(events.AbstractEventLoop):
                            'poll %.3f ms took %.3f ms: timeout',
                            timeout * 1e3, dt * 1e3)
         else:
-            event_list = self._selector.select(timeout)
-            # print(event_list)
+            event_list = self._selector.select(timeout)  # sleep会卡在这里。我去。原来是用的超时机制来做的sleep
         self._process_events(event_list)  # 这里对event事件进行处理
 
         # Handle 'later' callbacks that are ready.
         end_time = self.time() + self._clock_resolution
         while self._scheduled:  # 我靠。sleep到底是怎么实现的呀
             handle = self._scheduled[0]
-            if handle._when >= end_time:
+            if handle._when >= end_time:  # 如果因为别的事件触发导致sleep被提前运行，也没事，直接跳过这次请求即可
                 break
             handle = heapq.heappop(self._scheduled)
             handle._scheduled = False
