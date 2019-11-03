@@ -1665,7 +1665,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             return
         assert not isinstance(handle, events.TimerHandle)
         self._ready.append(handle)
-        print(handle)
+        # print(handle)
 
     def _add_callback_signalsafe(self, handle):
         """Like _add_callback() but called from a signal handler."""
