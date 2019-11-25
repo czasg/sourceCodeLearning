@@ -5,13 +5,13 @@ def test(a, b):
     return f"Hello World"
 
 if __name__ == '__main__':
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        futures = [executor.submit(test, 2, 2) for _ in range(2)]
-        for tes in wait(futures):
-            print('?')
-        print('在这里卡死了吗')
-        import time
-        time.sleep(2)
+    # with ThreadPoolExecutor(max_workers=2) as executor:
+    #     futures = [executor.submit(test, 2, 2) for _ in range(2)]
+    #     for tes in wait(futures):
+    #         print('?')
+    #     print('在这里卡死了吗')
+    #     import time
+    #     time.sleep(2)
 
     # aim = ThreadPoolExecutor(max_workers=2)
     # [aim.submit(test, 2, 2) for _ in range(2)]
@@ -21,6 +21,12 @@ if __name__ == '__main__':
     # time.sleep(2)
     # print('停不下来咯')
     # time.sleep(2)
+
+    from multiprocessing.managers import BaseManager
+    manager = BaseManager(address=('', 50000), authkey=b'abc')
+    server = manager.get_server()
+    server.serve_forever()
+
 
 # from minitools import MiniCache
 # import time
