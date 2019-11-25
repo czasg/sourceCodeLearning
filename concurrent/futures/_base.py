@@ -470,7 +470,7 @@ class Future(object):
                 raise TimeoutError()
 
     # The following methods should only be used by Executors and in tests.
-    def set_running_or_notify_cancel(self):
+    def set_running_or_notify_cancel(self):  # 就是一个修改运行状态的函数嘛，没有具体的执行功能
         """Mark the future as running or process any cancel notifications.
 
         Should only be used by Executor implementations and unit tests.
@@ -501,7 +501,7 @@ class Future(object):
                 # self._condition.notify_all() is not necessary because
                 # self.cancel() triggers a notification.
                 return False
-            elif self._state == PENDING:
+            elif self._state == PENDING:  # 如果是等待状态，则修改装状态为正在运行
                 self._state = RUNNING
                 return True
             else:
@@ -611,7 +611,7 @@ class Executor(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # 结束时执行__exit__函数
-        self.shutdown(wait=True)
+        self.shutdown(wait=True)  # 不知道该怎么描述，居然在上下文管理器这里实现了我想要的逻辑，无语
         return False
 
 

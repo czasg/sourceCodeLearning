@@ -10,7 +10,8 @@ from concurrent.futures import _base
 import itertools
 import queue
 import threading
-import weakref
+# 主要用途是实现保存大对象的高速缓存或映射，但又并希望大对象仅仅因为它出现在高速缓存或映射中而保持存活。
+import weakref  # 卧槽，原来这个偌引用里面有一个超级牛的回调函数啊
 import os
 
 # Workers are created as daemon threads. This is done to allow the interpreter
@@ -27,7 +28,7 @@ import os
 # workers to exit when their work queues are empty and then waits until the
 # threads finish.
 
-_threads_queues = weakref.WeakKeyDictionary()
+_threads_queues = weakref.WeakKeyDictionary()  # 弱引用字典
 _shutdown = False
 
 def _python_exit():
@@ -41,29 +42,29 @@ def _python_exit():
 
 atexit.register(_python_exit)
 
-
-class _WorkItem(object):  # 推入队列的实际对象
+# 这个类功能可真是mini呢
+class _WorkItem(object):  # 入队列的实际对象
     def __init__(self, future, fn, args, kwargs):
-        self.future = future
-        self.fn = fn
+        self.future = future  # 注册函数申请的未来对象
+        self.fn = fn  # 注册函数
         self.args = args
         self.kwargs = kwargs
 
-    def run(self):  # 执行时，调用注册函数。然后调用未来对象设置函数结果
+    def run(self):  # run就是真正执行函数的地方。获取结果后将结果传入未来对象
         if not self.future.set_running_or_notify_cancel():
             return
 
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.fn(*self.args, **self.kwargs)  # 调用init中的fn函数，从而得到结果
         except BaseException as exc:
             self.future.set_exception(exc)
             # Break a reference cycle with the exception 'exc'
             self = None
         else:
-            self.future.set_result(result)
+            self.future.set_result(result)  # 将此结果作为结果传入未来对象
 
 
-def _worker(executor_reference, work_queue, initializer, initargs):
+def _worker(executor_reference, work_queue, initializer, initargs):  # 线程调度的实际工作函数
     if initializer is not None:
         try:
             initializer(*initargs)
@@ -75,17 +76,13 @@ def _worker(executor_reference, work_queue, initializer, initargs):
             return
     try:
         while True:
-            work_item = work_queue.get(block=True)
-            # print('打印8次才对', work_item)
+            work_item = work_queue.get(block=True)  # 阻塞get，如何唤醒就是很经典的操作
             if work_item is not None:
-                # print('应该会阻塞在这里把')
-                work_item.run()  # 这里是一个阻塞的没问题把
-                # print('线程执行完了')
+                work_item.run()  # 阻塞执行
                 # Delete references to object. See issue16284
                 del work_item
-                continue  # 就是说如果这个线程立即执行完了可以继续获取，而不需要再开线程。可以的。
+                continue  # 但是每一个线程都会阻塞在上面的get。只要能拿到workitem最后就会上去啊
             executor = executor_reference()  # 获取弱引用
-            # print('走到这面来了')  # 每一个线程都会走到这里来
             # Exit if:
             #   - The interpreter is shutting down OR
             #   - The executor that owns the worker has been collected OR
@@ -97,7 +94,7 @@ def _worker(executor_reference, work_queue, initializer, initargs):
                 if executor is not None:
                     executor._shutdown = True
                 # Notice other workers
-                work_queue.put(None)  # 几个线程就执行几次。一定会有第一个跑到此处然后结束。然后递归结束。
+                work_queue.put(None)  # ??怎么来的
                 return
             del executor
     except BaseException:
@@ -148,7 +145,7 @@ class ThreadPoolExecutor(_base.Executor):
         self._initargs = initargs
 
     def submit(self, fn, *args, **kwargs):  # 每创建一个submit，都是会创建一个新的线程
-        with self._shutdown_lock:  # 确实是每一个都上锁操作。但是这力是非阻塞的
+        with self._shutdown_lock:  # 确实是每一个都上锁操作
             if self._broken:
                 raise BrokenThreadPool(self._broken)
 
@@ -158,18 +155,18 @@ class ThreadPoolExecutor(_base.Executor):
                 raise RuntimeError('cannot schedule new futures after '
                                    'interpreter shutdown')
 
-            f = _base.Future()
+            f = _base.Future()  # 创建一个未来对象
             w = _WorkItem(f, fn, args, kwargs)  # 实际工作对象
-
+            # 所谓的submit其实就是用目标函数注册一个未来对象，用此未来对象申请一个工作调度对象，然后将此工作对象推到队列中就完事了
             self._work_queue.put(w)  # 每一次submit都会将实际工作对象推入队列中
             self._adjust_thread_count()
-            return f
+            return f  # 返回注册函数申请的未来对象
     submit.__doc__ = _base.Executor.submit.__doc__
 
     def _adjust_thread_count(self):
         # When the executor gets lost, the weakref callback will wake up
         # the worker threads.
-        def weakref_cb(_, q=self._work_queue):
+        def weakref_cb(_, q=self._work_queue):  # 当前对象没有引用的时候，会执行此回调函数
             q.put(None)
         # TODO(bquinlan): Should avoid creating new threads if there are more
         # idle threads than items in the work queue.
@@ -182,10 +179,10 @@ class ThreadPoolExecutor(_base.Executor):
                                        self._work_queue,
                                        self._initializer,
                                        self._initargs))
-            t.daemon = True  # 居然设置为了守护进程
+            t.daemon = True  # 居然设置为了守护进程，就是为了防止程序停不下来
             t.start()
             self._threads.add(t)
-            _threads_queues[t] = self._work_queue
+            _threads_queues[t] = self._work_queue  # 这是一个弱引用字典。key的弱引用
 
     def _initializer_failed(self):
         with self._shutdown_lock:
@@ -203,7 +200,6 @@ class ThreadPoolExecutor(_base.Executor):
     def shutdown(self, wait=True):
         with self._shutdown_lock:
             self._shutdown = True
-            # print('不会是这里把')  # 原来还真是在结束前走的这里
             self._work_queue.put(None)  # 传入一个空，然后空的会继续不同的往里面put值，直至所有完成
         if wait:
             for t in self._threads:
