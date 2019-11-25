@@ -105,7 +105,7 @@ class _FirstCompletedWaiter(_Waiter):
         super().add_cancelled(future)
         self.event.set()
 
-class _AllCompletedWaiter(_Waiter):
+class _AllCompletedWaiter(_Waiter):  # 这也太普通了把...
     """Used by wait(return_when=FIRST_EXCEPTION and ALL_COMPLETED)."""
 
     def __init__(self, num_pending_calls, stop_on_exception):
@@ -120,7 +120,7 @@ class _AllCompletedWaiter(_Waiter):
             if not self.num_pending_calls:
                 self.event.set()
 
-    def add_result(self, future):
+    def add_result(self, future):  # 当有人set_result的时候。就会触发此处，将未来对象添加到完成队列中。并将等待对象减小1.并set释放锁
         super().add_result(future)
         self._decrement_pending_calls()
 
@@ -166,7 +166,7 @@ def _create_and_install_waiters(fs, return_when):
             raise ValueError("Invalid return condition: %r" % return_when)
 
     for f in fs:
-        f._waiters.append(waiter)
+        f._waiters.append(waiter)  # 原来在这里添加了waiter
 
     return waiter
 
@@ -256,7 +256,7 @@ def as_completed(fs, timeout=None):
                 f._waiters.remove(waiter)
 
 DoneAndNotDoneFutures = collections.namedtuple(
-        'DoneAndNotDoneFutures', 'done not_done')
+        'DoneAndNotDoneFutures', 'done not_done')  # 创建一个namedtuple => (done, not_done) 两个属性
 def wait(fs, timeout=None, return_when=ALL_COMPLETED):
     """Wait for the futures in the given sequence to complete.
 
@@ -281,10 +281,10 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
         completed. The second set, named 'not_done', contains uncompleted
         futures.
     """
-    with _AcquireFutures(fs):
+    with _AcquireFutures(fs):  # 遍历所有未来对象，并一个一个的请求锁操作
         done = set(f for f in fs
-                   if f._state in [CANCELLED_AND_NOTIFIED, FINISHED])
-        not_done = set(fs) - done
+                   if f._state in [CANCELLED_AND_NOTIFIED, FINISHED])  # 这是一个已完成的集合
+        not_done = set(fs) - done  # 没完成的就是直接相减，简单粗暴啊
 
         if (return_when == FIRST_COMPLETED) and done:
             return DoneAndNotDoneFutures(done, not_done)
@@ -298,8 +298,8 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
 
         waiter = _create_and_install_waiters(fs, return_when)
 
-    waiter.event.wait(timeout)
-    for f in fs:
+    waiter.event.wait(timeout)  # 当没有超时的时候。该出会一直阻塞直至有人set_result激活waiter中的_decrement_pending_calls。调度执行Event.set()
+    for f in fs:  # 当event被触发后，遍历所有的未来对象?这里会不会太僵硬了啊。没有办法指定目标嘛
         with f._condition:
             f._waiters.remove(waiter)
 
@@ -318,7 +318,7 @@ class Future(object):
         self._state = PENDING  # 初始化为等待状态
         self._result = None
         self._exception = None
-        self._waiters = []
+        self._waiters = []  # 在执行wait的时候，就往里面添加了waiter
         self._done_callbacks = []  # 结果获取后的回调处理
 
     def _invoke_callbacks(self):  # 调用回调函数 .. 僵硬的方法
@@ -364,29 +364,29 @@ class Future(object):
             self._state = CANCELLED
             self._condition.notify_all()
 
-        self._invoke_callbacks()
+        self._invoke_callbacks()  # 取消之前还会执行定义好的回调函数吗
         return True
 
     def cancelled(self):
         """Return True if the future was cancelled."""
         with self._condition:
-            return self._state in [CANCELLED, CANCELLED_AND_NOTIFIED]
+            return self._state in [CANCELLED, CANCELLED_AND_NOTIFIED]  # 取消 / 取消并通知
 
     def running(self):
         """Return True if the future is currently executing."""
         with self._condition:
-            return self._state == RUNNING
+            return self._state == RUNNING  # 正在执行
 
     def done(self):
         """Return True of the future was cancelled or finished executing."""
         with self._condition:
-            return self._state in [CANCELLED, CANCELLED_AND_NOTIFIED, FINISHED]
+            return self._state in [CANCELLED, CANCELLED_AND_NOTIFIED, FINISHED]  # 取消 / 取消并通知 / 完成
 
-    def __get_result(self):
+    def __get_result(self):  # 获取目标的执行结果。如果存在exception，则raise
         if self._exception:
             raise self._exception
         else:
-            return self._result
+            return self._result  # 没有异常，则正常返回结果
 
     def add_done_callback(self, fn):
         """Attaches a callable that will be called when the future finishes.
@@ -425,7 +425,7 @@ class Future(object):
             if self._state in [CANCELLED, CANCELLED_AND_NOTIFIED]:
                 raise CancelledError()
             elif self._state == FINISHED:
-                return self.__get_result()
+                return self.__get_result()  # 处于完成状态则返回目标结果
 
             self._condition.wait(timeout)  # 超时调用的是threading.condition.wait()
 
@@ -510,7 +510,7 @@ class Future(object):
                                 self._state)
                 raise RuntimeError('Future in unexpected state')
 
-    def set_result(self, result):
+    def set_result(self, result):  # 当获取结果的时候，调用该函数进行赋值并处罚回调函数
         """Sets the return value of work associated with the future.
 
         Should only be used by Executor implementations and unit tests.
@@ -519,8 +519,8 @@ class Future(object):
             self._result = result
             self._state = FINISHED
             for waiter in self._waiters:
-                waiter.add_result(self)
-            self._condition.notify_all()
+                waiter.add_result(self)  # 当有人完成的时候，执行add_result。触发
+            self._condition.notify_all()  # 通知所有锁
         self._invoke_callbacks()
 
     def set_exception(self, exception):
