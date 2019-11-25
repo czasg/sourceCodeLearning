@@ -56,10 +56,10 @@ class TimeoutError(Error):
 class _Waiter(object):
     """Provides the event that wait() and as_completed() block on."""
     def __init__(self):
-        self.event = threading.Event()
-        self.finished_futures = []
+        self.event = threading.Event()  # set() => True | clear() => False | wait() => init False and wait until it's True
+        self.finished_futures = []  # 用于存放已完成的未来对象目标
 
-    def add_result(self, future):
+    def add_result(self, future):  # 我发现了一个不太友好的现象。怎么都是添加到这个列表里面啊
         self.finished_futures.append(future)
 
     def add_exception(self, future):
@@ -73,12 +73,12 @@ class _AsCompletedWaiter(_Waiter):
 
     def __init__(self):
         super(_AsCompletedWaiter, self).__init__()
-        self.lock = threading.Lock()
+        self.lock = threading.Lock()  # 线程锁
 
     def add_result(self, future):
         with self.lock:  # 执行时获取锁
             super(_AsCompletedWaiter, self).add_result(future)
-            self.event.set()  # 这又是啥意思，with上下文管理器结束后不是会自动释放线程锁的嘛.  设置为True?????为啥
+            self.event.set()  # 设置当前Event状态为True
 
     def add_exception(self, future):
         with self.lock:
@@ -305,20 +305,23 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
 
     done.update(waiter.finished_futures)
     return DoneAndNotDoneFutures(done, set(fs) - done)
-
+# 未来对象
 class Future(object):
-    """Represents the result of an asynchronous computation."""
+    """
+    Represents the result of an asynchronous computation.
+    每一个异步动作，都需要实例化一个未来对象
+    """
 
     def __init__(self):
         """Initializes the future. Should not be called by clients."""
         self._condition = threading.Condition()
-        self._state = PENDING
+        self._state = PENDING  # 初始化为等待状态
         self._result = None
         self._exception = None
         self._waiters = []
-        self._done_callbacks = []
+        self._done_callbacks = []  # 结果获取后的回调处理
 
-    def _invoke_callbacks(self):
+    def _invoke_callbacks(self):  # 调用回调函数 .. 僵硬的方法
         for callback in self._done_callbacks:
             try:
                 callback(self)
@@ -326,7 +329,7 @@ class Future(object):
                 LOGGER.exception('exception calling callback for %r', self)
 
     def __repr__(self):
-        with self._condition:
+        with self._condition:  # 打日志也需要上锁嘛
             if self._state == FINISHED:
                 if self._exception:
                     return '<%s at %#x state=%s raised %s>' % (
@@ -347,7 +350,7 @@ class Future(object):
 
     def cancel(self):
         """Cancel the future if possible.
-
+        取消一个未来对象，但是当他正在执行或者已经执行完成的时候，是不能被取消的。会返回一个False
         Returns True if the future was cancelled, False otherwise. A future
         cannot be cancelled if it is running or has already completed.
         """
@@ -400,7 +403,7 @@ class Future(object):
             if self._state not in [CANCELLED, CANCELLED_AND_NOTIFIED, FINISHED]:
                 self._done_callbacks.append(fn)
                 return
-        fn(self)
+        fn(self)  # 将函数fn添加到待回调队列中，并执行一次函数吗
 
     def result(self, timeout=None):
         """Return the result of the call that the future represents.
@@ -424,7 +427,7 @@ class Future(object):
             elif self._state == FINISHED:
                 return self.__get_result()
 
-            self._condition.wait(timeout)
+            self._condition.wait(timeout)  # 超时调用的是threading.condition.wait()
 
             if self._state in [CANCELLED, CANCELLED_AND_NOTIFIED]:
                 raise CancelledError()
@@ -532,7 +535,7 @@ class Future(object):
                 waiter.add_exception(self)
             self._condition.notify_all()
         self._invoke_callbacks()
-
+# 这玩意一看就是疯狂被人继承的那种
 class Executor(object):
     """This is an abstract base class for concrete asynchronous executors."""
 
