@@ -555,7 +555,7 @@ def get_sockaddr(host, port, family):
     return res[0][4]
 
 
-class BaseWSGIServer(HTTPServer, object):  # 没想到啊没想到，BaseWSGI居然是基于HttpServer这个类的，那可真是太巧了啊
+class BaseWSGIServer(HTTPServer, object):
 
     """Simple single-threaded, single-process WSGI server."""
     multithread = False
@@ -661,7 +661,7 @@ def make_server(host=None, port=None, app=None, threaded=False, processes=1,
     elif processes > 1:
         return ForkingWSGIServer(host, port, app, processes, request_handler,
                                  passthrough_errors, ssl_context, fd=fd)
-    else:  # 说明最正常的就是这个Base服务咯
+    else:  # 走的这里
         return BaseWSGIServer(host, port, app, request_handler,
                               passthrough_errors, ssl_context, fd=fd)
 
