@@ -3,11 +3,6 @@ import selectors
 
 class Future:
     def __schedule_callbacks(self):
-        """Internal: Ask the event loop to call all callbacks.
-
-        The callbacks are scheduled to be called as soon as possible. Also
-        clears the callback list.
-        """
         callbacks = self._callbacks[:]
         if not callbacks:
             return
@@ -17,12 +12,6 @@ class Future:
             self._loop.call_soon(callback, self, context=ctx)
 
     def result(self):
-        """Return the result this future represents.
-
-        If the future has been cancelled, raises CancelledError.  If the
-        future's result isn't yet available, raises InvalidStateError.  If
-        the future is done and has an exception set, this exception is raised.
-        """
         if self._state == _CANCELLED:
             raise CancelledError
         if self._state != _FINISHED:
@@ -32,14 +21,8 @@ class Future:
             raise self._exception
         return self._result
 
-    def add_done_callback(self, fn, *, context=None):  # 添加回调函数
-        """Add a callback to be run when the future becomes done.
-
-        The callback is called with a single argument - the future object. If
-        the future is already done when this is called, the callback is
-        scheduled with call_soon.
-        """
-        if self._state != _PENDING:  # 只要函数不是在等待状态，则立即执行
+    def add_done_callback(self, fn, *, context=None):
+        if self._state != _PENDING:
             self._loop.call_soon(fn, self, context=context)
         else:
             if context is None:
@@ -47,18 +30,13 @@ class Future:
             self._callbacks.append((fn, context))
 
     def set_result(self, result):
-        """Mark the future done and set its result.
-
-        If the future is already done when this method is called, raises
-        InvalidStateError.
-        """
         if self._state != _PENDING:
             raise InvalidStateError('{}: {!r}'.format(self._state, self))
-        self._result = result  # 直接赋值结果
+        self._result = result
         self._state = _FINISHED
-        self.__schedule_callbacks()  # 并执行一次回调函数的调度
+        self.__schedule_callbacks()
 
-    def __await__(self):  # 这里就是如此。先yield本尊，然后再return目标结果
+    def __await__(self):
         if not self.done():
             self._asyncio_future_blocking = True
             yield self  # This tells Task to wait for completion.
@@ -75,8 +53,6 @@ class Task(Future):
         if self._source_traceback:
             del self._source_traceback[-1]
         if not coroutines.iscoroutine(coro):
-            # raise after Future.__init__(), attrs are required for __del__
-            # prevent logging for pending task in __del__
             self._log_destroy_pending = False
             raise TypeError(f"a coroutine was expected, got {coro!r}")
 
@@ -108,7 +84,6 @@ class Task(Future):
                 result = coro.throw(exc)
         except StopIteration as exc:
             if self._must_cancel:
-                # Task is cancelled right before coro stops.
                 self._must_cancel = False
                 super().set_exception(futures.CancelledError())
             else:
@@ -152,23 +127,20 @@ class Task(Future):
                         self.__step, new_exc, context=self._context)
 
             elif result is None:
-                # Bare yield relinquishes control for one event loop iteration.
                 self._loop.call_soon(self.__step, context=self._context)
             elif inspect.isgenerator(result):
-                # Yielding a generator is just wrong.
                 new_exc = RuntimeError(
                     f'yield was used instead of yield from for '
                     f'generator in task {self!r} with {result!r}')
                 self._loop.call_soon(
                     self.__step, new_exc, context=self._context)
             else:
-                # Yielding something else is an error.
                 new_exc = RuntimeError(f'Task got bad yield: {result!r}')
                 self._loop.call_soon(
                     self.__step, new_exc, context=self._context)
         finally:
             _leave_task(self._loop, self)
-            self = None  # Needed to break cycles when an exception occurs.
+            self = None
 
     def __wakeup(self, future):  # 那么你就对应着wakeup是吧
         try:
@@ -181,7 +153,7 @@ class Task(Future):
 
 
 class Handle:
-    def __init__(self, callback, args, loop, context=None):  # 包装回调函数、事件循环。用于统一调度执行
+    def __init__(self, callback, args, loop, context=None):
         if context is None:
             context = contextvars.copy_context()
         self._context = context
@@ -211,7 +183,7 @@ class Handle:
             if self._source_traceback:
                 context['source_traceback'] = self._source_traceback
             self._loop.call_exception_handler(context)
-        self = None  # Needed to break cycles when an exception occurs.
+        self = None
 
 
 class TimerHandle(Handle):
