@@ -3,7 +3,7 @@ import time
 
 
 def test(a, b):
-    time.sleep(3)
+    time.sleep(a + b)
     print('????????')
     return f"Hello World"
 
@@ -18,17 +18,18 @@ a.join();
 也就是说a使用了join。那么主线程就会阻塞直至a完成咯
 """
 if __name__ == '__main__':
-    # with ThreadPoolExecutor(max_workers=2) as executor:
-    #     futures = [executor.submit(test, 2, 2) for _ in range(2)]
-    #     for tes in wait(futures):
-    #         print('?')
-    #     print('在这里卡死了吗')
-    #     import time
-    #     time.sleep(2)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(test, 2, 2), executor.submit(test, 2, 8)]
+        # for tes in wait(futures):
+        #     print(tes)
+        now = time.time()
+        for future in as_completed(futures):
+            print(future.result(), time.time()-now)
 
-    import itertools
-    _counter = itertools.count().__next__
-    print(_counter(), _counter(), _counter())
+
+    # import itertools
+    # _counter = itertools.count().__next__
+    # print(_counter(), _counter(), _counter())
 
     # aim = ThreadPoolExecutor(max_workers=2)
     # [aim.submit(test, 2, 2) for _ in range(2)]  # 原来如此，调用了join导致主线程会等待所有线程直至结束

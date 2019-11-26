@@ -8,19 +8,19 @@ import logging
 import threading
 import time
 
-FIRST_COMPLETED = 'FIRST_COMPLETED'
-FIRST_EXCEPTION = 'FIRST_EXCEPTION'
-ALL_COMPLETED = 'ALL_COMPLETED'
-_AS_COMPLETED = '_AS_COMPLETED'
+FIRST_COMPLETED = 'FIRST_COMPLETED'  # 第一个完成就pass
+FIRST_EXCEPTION = 'FIRST_EXCEPTION'  # 第一个异常就pass
+ALL_COMPLETED = 'ALL_COMPLETED'  # 全部完成的意思吧
+_AS_COMPLETED = '_AS_COMPLETED'  # ??? 为已完成
 
 # Possible future states (for internal use by the futures package).
-PENDING = 'PENDING'
-RUNNING = 'RUNNING'
+PENDING = 'PENDING'  # 等待
+RUNNING = 'RUNNING'  # 正在执行
 # The future was cancelled by the user...
-CANCELLED = 'CANCELLED'
+CANCELLED = 'CANCELLED'  # 取消
 # ...and _Waiter.add_cancelled() was called by a worker.
-CANCELLED_AND_NOTIFIED = 'CANCELLED_AND_NOTIFIED'
-FINISHED = 'FINISHED'
+CANCELLED_AND_NOTIFIED = 'CANCELLED_AND_NOTIFIED'  # 取消并通知
+FINISHED = 'FINISHED'  # 完成
 
 _FUTURE_STATES = [
     PENDING,
@@ -53,7 +53,7 @@ class TimeoutError(Error):
     """The operation exceeded the given deadline."""
     pass
 
-class _Waiter(object):
+class _Waiter(object):  # 创建等待阻塞任务，主要是  wait() and as_completed()
     """Provides the event that wait() and as_completed() block on."""
     def __init__(self):
         self.event = threading.Event()  # set() => True | clear() => False | wait() => init False and wait until it's True
@@ -68,14 +68,14 @@ class _Waiter(object):
     def add_cancelled(self, future):
         self.finished_futures.append(future)
 
-class _AsCompletedWaiter(_Waiter):
+class _AsCompletedWaiter(_Waiter):  # AS_COMPLETE 运行前需要获取锁
     """Used by as_completed()."""
 
     def __init__(self):
         super(_AsCompletedWaiter, self).__init__()
         self.lock = threading.Lock()  # 线程锁
 
-    def add_result(self, future):
+    def add_result(self, future):  # 只要有一个人pass，就会释放锁
         with self.lock:  # 执行时获取锁
             super(_AsCompletedWaiter, self).add_result(future)
             self.event.set()  # 设置当前Event状态为True
@@ -90,7 +90,7 @@ class _AsCompletedWaiter(_Waiter):
             super(_AsCompletedWaiter, self).add_cancelled(future)
             self.event.set()
 
-class _FirstCompletedWaiter(_Waiter):
+class _FirstCompletedWaiter(_Waiter):  # 和AS_COMPLETE基本一样，但是运行时并不获取锁
     """Used by wait(return_when=FIRST_COMPLETED)."""
 
     def add_result(self, future):
@@ -109,8 +109,8 @@ class _AllCompletedWaiter(_Waiter):  # 这也太普通了把...
     """Used by wait(return_when=FIRST_EXCEPTION and ALL_COMPLETED)."""
 
     def __init__(self, num_pending_calls, stop_on_exception):
-        self.num_pending_calls = num_pending_calls
-        self.stop_on_exception = stop_on_exception
+        self.num_pending_calls = num_pending_calls  # 等待数量
+        self.stop_on_exception = stop_on_exception  # 异常数量
         self.lock = threading.Lock()
         super().__init__()
 
@@ -118,7 +118,7 @@ class _AllCompletedWaiter(_Waiter):  # 这也太普通了把...
         with self.lock:
             self.num_pending_calls -= 1
             if not self.num_pending_calls:
-                self.event.set()
+                self.event.set()  # 只有当所有的等待事件都处理完成，才会执行此处的释放锁
 
     def add_result(self, future):  # 当有人set_result的时候。就会触发此处，将未来对象添加到完成队列中。并将等待对象减小1.并set释放锁
         super().add_result(future)
@@ -193,7 +193,7 @@ def _yield_finished_futures(fs, waiter, ref_collect):
         yield fs.pop()
 
 
-def as_completed(fs, timeout=None):
+def as_completed(fs, timeout=None):  # 谁先完成就pass，后续会继续上锁的，莫慌
     """An iterator over the given futures that yields each as it completes.
 
     Args:
@@ -302,7 +302,7 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
     for f in fs:  # 当event被触发后，遍历所有的未来对象?这里会不会太僵硬了啊。没有办法指定目标嘛
         with f._condition:
             f._waiters.remove(waiter)
-
+    # waiter就是在主线程阻塞等待结果。子线程获取到了结果，然后看是哪种模式，全等待模式则等待所有的任务全部完成后再释放锁，任意pass则只需要有一个pass就可以释放锁
     done.update(waiter.finished_futures)
     return DoneAndNotDoneFutures(done, set(fs) - done)
 # 未来对象
