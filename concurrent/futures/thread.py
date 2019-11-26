@@ -35,15 +35,15 @@ def _python_exit():
     global _shutdown
     _shutdown = True
     items = list(_threads_queues.items())
-    print('----------------')
-    print(items)
-    print('----------------')
+    # print('----------------')
+    # print(items)
+    # print('----------------')
     for t, q in items:
         q.put(None)
-    for t, q in items:
-        t.join()
+    for t, q in items:  # 果然，注释掉就over了
+        t.join()  # 这个join感觉不简单啊。主线程会阻塞在此处直至完成生命周期
 
-atexit.register(_python_exit)
+atexit.register(_python_exit)  # 这个操作我也要，太秀了把
 
 # 这个类功能可真是mini呢
 class _WorkItem(object):  # 入队列的实际对象
@@ -143,7 +143,7 @@ class ThreadPoolExecutor(_base.Executor):
         self._shutdown = False
         self._shutdown_lock = threading.Lock()
         self._thread_name_prefix = (thread_name_prefix or
-                                    ("ThreadPoolExecutor-%d" % self._counter()))
+                                    ("ThreadPoolExecutor-%d" % self._counter()))  # 卧槽，还有这种自增的统计方式嘛，可太秀了吧
         self._initializer = initializer
         self._initargs = initargs
 
@@ -183,7 +183,7 @@ class ThreadPoolExecutor(_base.Executor):
                                        self._initializer,
                                        self._initargs))
             t.daemon = True  # 居然设置为了守护进程，就是为了防止程序停不下来
-            t.start()
+            t.start()  # 这里就很机智，没有使用join，而是留到主线程结束才是用，就很骚，这编程确实很强
             self._threads.add(t)
             _threads_queues[t] = self._work_queue  # 这是一个弱引用字典。key的弱引用
 
