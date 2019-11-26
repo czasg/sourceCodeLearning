@@ -13,7 +13,7 @@ SETTINGS_PARAMS_MAP = {
     'REDIS_ENCODING': 'encoding',
 }
 
-
+# 初始化默认redis配置，从setting中获取覆盖配置，创建redis连接。也就是常用的 redis.StrictRedis
 def get_redis_from_settings(settings):
     """Returns a redis client instance from given Scrapy settings object.
 

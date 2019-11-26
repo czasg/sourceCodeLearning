@@ -35,14 +35,14 @@ class RedisPipeline(object):
             Items serializer function.
 
         """
-        self.server = server
+        self.server = server  # redis句柄
         self.key = key
         self.serialize = serialize_func
 
     @classmethod
     def from_settings(cls, settings):
         params = {
-            'server': connection.from_settings(settings),
+            'server': connection.from_settings(settings),  # 这个server里面装的就是redis句柄。此处貌似没有缓存，差评
         }
         if settings.get('REDIS_ITEMS_KEY'):
             params['key'] = settings['REDIS_ITEMS_KEY']
@@ -62,8 +62,8 @@ class RedisPipeline(object):
 
     def _process_item(self, item, spider):
         key = self.item_key(item, spider)
-        data = self.serialize(item)
-        self.server.rpush(key, data)
+        data = self.serialize(item)  # 把实例对象转化为str，也就是一个序列化的过程
+        self.server.rpush(key, data)  # 然后使用redis，将数据推进去咯。我去，那这个还有点狠呢
         return item
 
     def item_key(self, item, spider):
