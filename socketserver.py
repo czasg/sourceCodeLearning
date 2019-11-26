@@ -434,7 +434,7 @@ class TCPServer(BaseServer):
 
     """
 
-    address_family = socket.AF_INET
+    address_family = socket.AF_INET  # (host, port)
 
     socket_type = socket.SOCK_STREAM
 
