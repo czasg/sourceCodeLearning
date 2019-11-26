@@ -1,18 +1,49 @@
+# -*- coding: utf-8 -*-
 import asyncio
+import contextvars
 
-loop = asyncio.get_event_loop()
+# 申明Context变量
+request_id = contextvars.ContextVar('Id of request')
 
-async def test():
-    print('test')
+
+async def get():
+    # Get Value
+    print(f'Request ID (Inner): {request_id.get()}')
+
+
+async def new_coro(req_id):
+    # Set Value
+    request_id.set(req_id)
+    await get()
+    print(f'Request ID (Outer): {request_id.get()}')
+
 
 async def main():
-    await asyncio.gather(
-        test(),
-        test(),
-    )
+    tasks = []
+    for req_id in range(0, 5):
+        tasks.append(asyncio.create_task(new_coro(req_id)))
 
-if __name__ == '__main__':
-    loop.run_until_complete(main())
+    await asyncio.gather(*tasks)
+
+
+asyncio.run(main())
+
+
+# import asyncio
+#
+# loop = asyncio.get_event_loop()
+#
+# async def test():
+#     print('test')
+#
+# async def main():
+#     await asyncio.gather(
+#         test(),
+#         test(),
+#     )
+#
+# if __name__ == '__main__':
+#     loop.run_until_complete(main())
 
 
 

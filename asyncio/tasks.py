@@ -581,7 +581,7 @@ def ensure_future(coro_or_future, *, loop=None):
     if coroutines.iscoroutine(coro_or_future):
         if loop is None:
             loop = events.get_event_loop()
-        task = loop.create_task(coro_or_future)  # 第一次进来是main。第二次进来是test
+        task = loop.create_task(coro_or_future)  # 目标函数是协程，则调用create_task，根据目标来申请任务Task
         if task._source_traceback:
             del task._source_traceback[-1]
         return task

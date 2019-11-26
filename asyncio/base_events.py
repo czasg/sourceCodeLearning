@@ -402,7 +402,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         """
         self._check_closed()
         if self._task_factory is None:
-            task = tasks.Task(coro, loop=self)  # <Task pending coro=<main() + <Task pending coro=<test_for_sleep()
+            task = tasks.Task(coro, loop=self)  # 用目标协程，申请一个任务
             if task._source_traceback:
                 del task._source_traceback[-1]
         else:
@@ -534,9 +534,9 @@ class BaseEventLoop(events.AbstractEventLoop):
         sys.set_asyncgen_hooks(firstiter=self._asyncgen_firstiter_hook,
                                finalizer=self._asyncgen_finalizer_hook)
         try:
-            events._set_running_loop(self)  # 原来是在run_forever这里对_running_loop进行赋值的呀
+            events._set_running_loop(self)
             while True:
-                self._run_once()  # 关键点。会开在这不停的轮询是吧
+                self._run_once()
                 if self._stopping:
                     break
         finally:
@@ -546,7 +546,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             self._set_coroutine_origin_tracking(False)
             sys.set_asyncgen_hooks(*old_agen_hooks)
 
-    def run_until_complete(self, future):  # 事件循环看这里。看到上面去了。上面是挂起一个Server
+    def run_until_complete(self, future):
         """Run until the Future is done.
 
         If the argument is a coroutine, it is wrapped in a Task.
@@ -560,15 +560,15 @@ class BaseEventLoop(events.AbstractEventLoop):
         self._check_closed()
 
         new_task = not futures.isfuture(future)
-        future = tasks.ensure_future(future, loop=self)  # <Task pending coro=<main()
+        future = tasks.ensure_future(future, loop=self)
         if new_task:
             # An exception is raised if the future didn't complete, so there
             # is no need to log the "destroy pending task" message
             future._log_destroy_pending = False
 
-        future.add_done_callback(_run_until_complete_cb)  # Task.add_done_callback
+        future.add_done_callback(_run_until_complete_cb)  # future <=> Task ?
         try:
-            self.run_forever()  # 还是要执行这里...
+            self.run_forever()
         except:
             if new_task and future.done() and not future.cancelled():
                 # The coroutine raised a BaseException. Consume the exception
@@ -1720,7 +1720,7 @@ class BaseEventLoop(events.AbstractEventLoop):
 
         if self._debug and timeout != 0:  # 调试模式。打印一些时间是把。想法很骚，很强
             t0 = self.time()
-            event_list = self._selector.select(timeout)  # 哈哈，又被我找到了_selector，但是是在哪里赋值的呢
+            event_list = self._selector.select(timeout)
             dt = self.time() - t0
             if dt >= 1.0:
                 level = logging.INFO
@@ -1744,7 +1744,7 @@ class BaseEventLoop(events.AbstractEventLoop):
 
         # Handle 'later' callbacks that are ready.
         end_time = self.time() + self._clock_resolution
-        while self._scheduled:  # 我靠。sleep到底是怎么实现的呀
+        while self._scheduled:
             handle = self._scheduled[0]
             if handle._when >= end_time:  # 如果因为别的事件触发导致sleep被提前运行，也没事，直接跳过这次请求即可
                 break

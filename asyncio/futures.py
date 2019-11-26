@@ -28,7 +28,7 @@ _FINISHED = base_futures._FINISHED
 
 STACK_DEBUG = logging.DEBUG - 1  # heavy-duty debugging
 
-# 这个未来对象总体来说，还是装了未来值，然后使用回调处理。逻辑差不多吧
+
 class Future:
     """This class is *almost* compatible with concurrent.futures.Future.
 
@@ -79,8 +79,8 @@ class Future:
             self._loop = events.get_event_loop()
         else:
             self._loop = loop
-        self._callbacks = []
-        if self._loop.get_debug():  # 老贼。在这里调用的get_debug
+        self._callbacks = []  # 用来存放回调函数的地方嘛
+        if self._loop.get_debug():
             self._source_traceback = format_helpers.extract_stack(
                 sys._getframe(1))
 
@@ -134,7 +134,7 @@ class Future:
         self.__schedule_callbacks()
         return True
 
-    def __schedule_callbacks(self):  # 就是调度一次回调函数咯
+    def __schedule_callbacks(self):
         """Internal: Ask the event loop to call all callbacks.
 
         The callbacks are scheduled to be called as soon as possible. Also
@@ -144,9 +144,9 @@ class Future:
         if not callbacks:
             return
 
-        self._callbacks[:] = []  # 可以，又涨知识了。直接在原内存的基础上进行操作。赋值为空表
+        self._callbacks[:] = []
         for callback, ctx in callbacks:
-            self._loop.call_soon(callback, self, context=ctx)  # call_soon ??? 立即执行的意思嘛
+            self._loop.call_soon(callback, self, context=ctx)
 
     def cancelled(self):
         """Return True if the future was cancelled."""
@@ -232,9 +232,9 @@ class Future:
         """
         if self._state != _PENDING:
             raise InvalidStateError('{}: {!r}'.format(self._state, self))
-        self._result = result
+        self._result = result  # 直接赋值结果
         self._state = _FINISHED
-        self.__schedule_callbacks()  # 添加结果并执行一次调度
+        self.__schedule_callbacks()  # 并执行一次回调函数的调度
 
     def set_exception(self, exception):
         """Mark the future done and set an exception.
