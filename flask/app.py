@@ -2284,7 +2284,7 @@ class Flask(_PackageBoundObject):
             a list of headers, and an optional exception context to
             start the response.
         """
-        ctx = self.request_context(environ)
+        ctx = self.request_context(environ)  # 这里???上下文管理器???
         error = None
         try:
             try:
