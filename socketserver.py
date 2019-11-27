@@ -122,7 +122,6 @@ BaseServer:
 
 __version__ = "0.4"
 
-
 import socket
 import selectors
 import os
@@ -131,14 +130,15 @@ import threading
 from io import BufferedIOBase
 from time import monotonic as time
 
+# 需要了解的模块：BaseServer|TCPServer|ThreadingTCPServer|BaseRequestHandler|StreamRequestHandler
 __all__ = ["BaseServer", "TCPServer", "UDPServer",
            "ThreadingUDPServer", "ThreadingTCPServer",
            "BaseRequestHandler", "StreamRequestHandler",
            "DatagramRequestHandler", "ThreadingMixIn"]
 if hasattr(os, "fork"):
-    __all__.extend(["ForkingUDPServer","ForkingTCPServer", "ForkingMixIn"])
+    __all__.extend(["ForkingUDPServer", "ForkingTCPServer", "ForkingMixIn"])
 if hasattr(socket, "AF_UNIX"):
-    __all__.extend(["UnixStreamServer","UnixDatagramServer",
+    __all__.extend(["UnixStreamServer", "UnixDatagramServer",
                     "ThreadingUnixStreamServer",
                     "ThreadingUnixDatagramServer"])
 
@@ -151,7 +151,6 @@ else:
 
 
 class BaseServer:
-
     """Base class for server classes.
 
     Methods for the caller:
@@ -199,10 +198,10 @@ class BaseServer:
 
     def __init__(self, server_address, RequestHandlerClass):
         """Constructor.  May be extended, do not override."""
-        self.server_address = server_address
+        self.server_address = server_address  # 用户待绑定的目标地址
         self.RequestHandlerClass = RequestHandlerClass
         self.__is_shut_down = threading.Event()
-        self.__shutdown_request = False
+        self.__shutdown_request = False  # 关闭轮询的flag
 
     def server_activate(self):
         """Called by constructor to activate the server.
@@ -219,7 +218,7 @@ class BaseServer:
         self.timeout. If you need to do periodic tasks, do them in
         another thread.
         """
-        self.__is_shut_down.clear()
+        self.__is_shut_down.clear()  # 设置 Event() -> False
         try:
             # XXX: Consider using another file descriptor or connecting to the
             # socket to wake this up instead of polling. Polling reduces our
@@ -239,7 +238,7 @@ class BaseServer:
                     self.service_actions()
         finally:
             self.__shutdown_request = False
-            self.__is_shut_down.set()
+            self.__is_shut_down.set()  # 设置 Event() -> True
 
     def shutdown(self):
         """Stops the serve_forever loop.
@@ -248,7 +247,7 @@ class BaseServer:
         serve_forever() is running in another thread, or it will
         deadlock.
         """
-        self.__shutdown_request = True
+        self.__shutdown_request = True  # 设置True后轮询即将关闭。然后server_forever触发set激活此处继续进行
         self.__is_shut_down.wait()
 
     def service_actions(self):
@@ -270,7 +269,7 @@ class BaseServer:
     # - finish_request() instantiates the request handler class; this
     #   constructor will handle the request all by itself
 
-    def handle_request(self):
+    def handle_request(self):  # 最高级的处理request，但是这个貌似只处理一次就over了
         """Handle one request, possibly blocking.
 
         Respects self.timeout.
@@ -308,12 +307,12 @@ class BaseServer:
         blocking in get_request().
         """
         try:
-            request, client_address = self.get_request()
+            request, client_address = self.get_request()  # 获取request和地址
         except OSError:
             return
-        if self.verify_request(request, client_address):
+        if self.verify_request(request, client_address):  # 认证
             try:
-                self.process_request(request, client_address)
+                self.process_request(request, client_address)  # 处理request请求 - 可以在此处开启新线程处理请求
             except Exception:
                 self.handle_error(request, client_address)
                 self.shutdown_request(request)
@@ -357,7 +356,7 @@ class BaseServer:
 
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
-        self.RequestHandlerClass(request, client_address, self)
+        self.RequestHandlerClass(request, client_address, self)  # 输入为request、地址、还有server本身
 
     def shutdown_request(self, request):
         """Called to shutdown and close an individual request."""
@@ -373,12 +372,12 @@ class BaseServer:
         The default is to print a traceback and continue.
 
         """
-        print('-'*40, file=sys.stderr)
+        print('-' * 40, file=sys.stderr)
         print('Exception happened during processing of request from',
-            client_address, file=sys.stderr)
+              client_address, file=sys.stderr)
         import traceback
         traceback.print_exc()
-        print('-'*40, file=sys.stderr)
+        print('-' * 40, file=sys.stderr)
 
     def __enter__(self):
         return self
@@ -388,7 +387,6 @@ class BaseServer:
 
 
 class TCPServer(BaseServer):
-
     """Base class for various socket-based server classes.
 
     Defaults to synchronous IP stream (i.e., TCP).
@@ -436,7 +434,7 @@ class TCPServer(BaseServer):
 
     address_family = socket.AF_INET  # (host, port)
 
-    socket_type = socket.SOCK_STREAM
+    socket_type = socket.SOCK_STREAM  # meaning TCP
 
     request_queue_size = 5
 
@@ -444,13 +442,13 @@ class TCPServer(BaseServer):
 
     def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
         """Constructor.  May be extended, do not override."""
-        BaseServer.__init__(self, server_address, RequestHandlerClass)
+        BaseServer.__init__(self, server_address, RequestHandlerClass)  # server_address是用户定义的目标地址
         self.socket = socket.socket(self.address_family,
                                     self.socket_type)
         if bind_and_activate:
             try:
                 self.server_bind()
-                self.server_activate()
+                self.server_activate()  # activate the server. 激活就是调用 listen() 启动监听功能
             except:
                 self.server_close()
                 raise
@@ -490,7 +488,7 @@ class TCPServer(BaseServer):
         """
         return self.socket.fileno()
 
-    def get_request(self):
+    def get_request(self):  # -> request, address
         """Get the request and client address from the socket.
 
         May be overridden.
@@ -501,11 +499,11 @@ class TCPServer(BaseServer):
     def shutdown_request(self, request):
         """Called to shutdown and close an individual request."""
         try:
-            #explicitly shutdown.  socket.close() merely releases
-            #the socket and waits for GC to perform the actual close.
+            # explicitly shutdown.  socket.close() merely releases
+            # the socket and waits for GC to perform the actual close.
             request.shutdown(socket.SHUT_WR)
         except OSError:
-            pass #some platforms may raise ENOTCONN here
+            pass  # some platforms may raise ENOTCONN here
         self.close_request(request)
 
     def close_request(self, request):
@@ -514,7 +512,6 @@ class TCPServer(BaseServer):
 
 
 class UDPServer(TCPServer):
-
     """UDP server class."""
 
     allow_reuse_address = False
@@ -538,6 +535,7 @@ class UDPServer(TCPServer):
     def close_request(self, request):
         # No need to close anything.
         pass
+
 
 if hasattr(os, "fork"):
     class ForkingMixIn:
@@ -633,9 +631,9 @@ class ThreadingMixIn:
 
     # Decides how threads will act upon termination of the
     # main process
-    daemon_threads = False
+    daemon_threads = False  # 守护线程
     # If true, server_close() waits until all non-daemonic threads terminate.
-    block_on_close = True
+    block_on_close = True  # 等待所有线程关闭后再关闭主县春城
     # For non-daemonic threads, list of threading.Threading objects
     # used by server_close() to wait for all threads completion.
     _threads = None
@@ -647,16 +645,16 @@ class ThreadingMixIn:
 
         """
         try:
-            self.finish_request(request, client_address)
+            self.finish_request(request, client_address)  # 默认finish_request，直接调用handler处理一次请求即可
         except Exception:
             self.handle_error(request, client_address)
         finally:
             self.shutdown_request(request)
 
-    def process_request(self, request, client_address):
+    def process_request(self, request, client_address):  # 开启一个线程处理新的request，新线程调用 finish_request 完成对request的处理
         """Start a new thread to process the request."""
-        t = threading.Thread(target = self.process_request_thread,
-                             args = (request, client_address))
+        t = threading.Thread(target=self.process_request_thread,
+                             args=(request, client_address))
         t.daemon = self.daemon_threads
         if not t.daemon and self.block_on_close:
             if self._threads is None:
@@ -671,37 +669,45 @@ class ThreadingMixIn:
             self._threads = None
             if threads:
                 for thread in threads:
-                    thread.join()
+                    thread.join()  # 又是join，等待所有线程结束就完事
 
 
 if hasattr(os, "fork"):
     class ForkingUDPServer(ForkingMixIn, UDPServer): pass
+
+
     class ForkingTCPServer(ForkingMixIn, TCPServer): pass
 
+
 class ThreadingUDPServer(ThreadingMixIn, UDPServer): pass
+
+
 class ThreadingTCPServer(ThreadingMixIn, TCPServer): pass
 
-if hasattr(socket, 'AF_UNIX'):
 
+if hasattr(socket, 'AF_UNIX'):
     class UnixStreamServer(TCPServer):
         address_family = socket.AF_UNIX
+
 
     class UnixDatagramServer(UDPServer):
         address_family = socket.AF_UNIX
 
+
     class ThreadingUnixStreamServer(ThreadingMixIn, UnixStreamServer): pass
+
 
     class ThreadingUnixDatagramServer(ThreadingMixIn, UnixDatagramServer): pass
 
-class BaseRequestHandler:
 
+class BaseRequestHandler:
     """Base class for request handler classes.
 
     This class is instantiated for each request to be handled.  The
     constructor sets the instance variables request, client_address
     and server, and then calls the handle() method.  To implement a
     specific service, all you need to do is to derive a class which
-    defines a handle() method.
+    defines a handle() method. -> 你需要做的就是派生一个类，并定义handle()方法
 
     The handle() method can find the request as self.request, the
     client address as self.client_address, and the server (in case it
@@ -740,7 +746,6 @@ class BaseRequestHandler:
 
 
 class StreamRequestHandler(BaseRequestHandler):
-
     """Define self.rfile and self.wfile for stream sockets."""
 
     # Default buffer sizes for rfile, wfile.
@@ -769,7 +774,7 @@ class StreamRequestHandler(BaseRequestHandler):
                                        socket.TCP_NODELAY, True)
         self.rfile = self.connection.makefile('rb', self.rbufsize)
         if self.wbufsize == 0:
-            self.wfile = _SocketWriter(self.connection)
+            self.wfile = _SocketWriter(self.connection)  # 老老实实的sendall，就不香嘛
         else:
             self.wfile = self.connection.makefile('wb', self.wbufsize)
 
@@ -783,6 +788,7 @@ class StreamRequestHandler(BaseRequestHandler):
                 pass
         self.wfile.close()
         self.rfile.close()
+
 
 class _SocketWriter(BufferedIOBase):
     """Simple writable BufferedIOBase implementation for a socket
@@ -803,8 +809,8 @@ class _SocketWriter(BufferedIOBase):
     def fileno(self):
         return self._sock.fileno()
 
-class DatagramRequestHandler(BaseRequestHandler):
 
+class DatagramRequestHandler(BaseRequestHandler):
     """Define self.rfile and self.wfile for datagram sockets."""
 
     def setup(self):
