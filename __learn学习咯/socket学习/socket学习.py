@@ -15,23 +15,25 @@ sock.listen()
 
 def _accept(sock: socket.socket):
     s, addrinfo = sock.accept()
-    f = s.makefile(mode='rw')
+    fr = s.makefile(mode='rb', buffering=1024)
+    fw = s.makefile(mode='wb', buffering=1024)
 
     while True:
-        line = f.readline()  # read(10) 文本使用readline
+        line = fr.readline()  # read(10) 文本使用readlin
         logging.info(line)
 
         if line.strip() == 'quit':
             break
 
         msg = "Your msg = {}. ack".format(line)
-        f.write(msg)
-        f.flush()
-    f.close()
+        fw.write(msg.encode())
+        fw.flush()
+    fw.close()
+    fr.close()
     sock.close()
 
 
 threading.Thread(target=_accept, args=(sock,)).start()
 
-while not event.wait(2):
-    logging.info(sock)
+# while not event.wait(2):
+#     logging.info(sock)

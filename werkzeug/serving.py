@@ -286,11 +286,11 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             self.server.log('error', 'Error on request:\n%s',
                             traceback.plaintext)
 
-    def handle(self):  # 这里的handle应该是主要的执行函数啊
+    def handle(self):
         """Handles a request ignoring dropped connections."""
         rv = None
         try:
-            rv = BaseHTTPRequestHandler.handle(self)  # 僵硬，super().handle(self)
+            rv = BaseHTTPRequestHandler.handle(self)  # 执行handle_one_request函数
         except (socket.error, socket.timeout) as e:
             self.connection_dropped(e)
         except Exception:
@@ -325,7 +325,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         if not self.raw_requestline:
             self.close_connection = 1
         elif self.parse_request():
-            return self.run_wsgi()
+            return self.run_wsgi()  # 执行在handle中执行run_wsgi函数
 
     def send_response(self, code, message=None):
         """Send the response header and log the response code."""
@@ -574,7 +574,7 @@ class BaseWSGIServer(HTTPServer, object):
                                       socket.SOCK_STREAM)
             port = 0
         HTTPServer.__init__(self, get_sockaddr(host, int(port),
-                                               self.address_family), handler)
+                                               self.address_family), handler)  # server_address, RequestHandlerClass
         self.app = app
         self.passthrough_errors = passthrough_errors
         self.shutdown_signal = False
@@ -609,7 +609,12 @@ class BaseWSGIServer(HTTPServer, object):
     def serve_forever(self):
         self.shutdown_signal = False
         try:
-            HTTPServer.serve_forever(self)  # 调用父类的方法咯，为啥喜欢用这种写法呢
+            """
+            init: server_bind -> server_activate
+            loop: _handle_request_noblock -> verify_request -> process_request -> 
+                  finish_request -> shutdown_request -> service_actions
+            """
+            HTTPServer.serve_forever(self)  # 走默认流程
         except KeyboardInterrupt:
             pass
         finally:

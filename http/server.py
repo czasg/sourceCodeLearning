@@ -141,7 +141,7 @@ class HTTPServer(socketserver.TCPServer):
 
 
 class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
-    daemon_threads = True
+    daemon_threads = True  # 这个类居然设为守护线程
 
 
 class BaseHTTPRequestHandler(socketserver.StreamRequestHandler):
