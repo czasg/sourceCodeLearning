@@ -3,9 +3,11 @@ import threading
 import time
 import _threading_local
 
+
 class Local(_threading_local.local):
     argv1 = None
     argv2 = None
+
 
 print(id(threading.current_thread()), 'This is the main-thread')
 ll = Local()
@@ -31,11 +33,19 @@ def show():
 if __name__ == '__main__':
     data = [
         ['cza', 'sg'],
-        ['ha', 'good'],
-        ['whats', 'ready']
+        # ['ha', 'good'],
+        # ['whats', 'ready']
     ]
+
+
     for d in data:
         threading.Thread(target=process, args=d).start()
 
-
-
+    # class Test:
+    #     pass
+    #
+    #
+    # ar = []
+    # kw = {}
+    # test = Test()
+    # test.__init__(*ar, **kw)

@@ -196,10 +196,11 @@ def _patch(self):
     impl = object.__getattribute__(self, '_local__impl')
     try:
         dct = impl.get_dict()
-    except KeyError:  # 初始化的时候会在主线程创建一个字典环境
-        dct = impl.create_dict()
+    except KeyError:  # 初始化的时候会在主线程创建一个字典环境, 报错就说明这是一个新的线程，需要重新注册内存id到字典里面
+        dct = impl.create_dict()  # 返回注册了的字典。这里是一个空的字典把
         args, kw = impl.localargs
-        self.__init__(*args, **kw)  # 实例化????local???? 没有貌似也没有报错，这是何道理???
+        self.__init__(*args, **kw)  # 实例化???? 这是何道理???
+        print(help(self))
     with impl.locallock:
         object.__setattr__(self, '__dict__', dct)
         yield
