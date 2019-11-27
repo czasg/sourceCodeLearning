@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Generic socket server classes.
 
 This module tries to capture the various aspects of defining a server:
@@ -130,7 +131,7 @@ import threading
 from io import BufferedIOBase
 from time import monotonic as time
 
-# ĞèÒªÁË½âµÄÄ£¿é£ºBaseServer|TCPServer|ThreadingTCPServer|BaseRequestHandler|StreamRequestHandler
+# éœ€è¦äº†è§£çš„æ¨¡å—ï¼šBaseServer|TCPServer|ThreadingTCPServer|BaseRequestHandler|StreamRequestHandler
 __all__ = ["BaseServer", "TCPServer", "UDPServer",
            "ThreadingUDPServer", "ThreadingTCPServer",
            "BaseRequestHandler", "StreamRequestHandler",
@@ -198,10 +199,10 @@ class BaseServer:
 
     def __init__(self, server_address, RequestHandlerClass):
         """Constructor.  May be extended, do not override."""
-        self.server_address = server_address  # ÓÃ»§´ı°ó¶¨µÄÄ¿±êµØÖ·
+        self.server_address = server_address  # ç”¨æˆ·å¾…ç»‘å®šçš„ç›®æ ‡åœ°å€
         self.RequestHandlerClass = RequestHandlerClass
         self.__is_shut_down = threading.Event()
-        self.__shutdown_request = False  # ¹Ø±ÕÂÖÑ¯µÄflag
+        self.__shutdown_request = False  # å…³é—­è½®è¯¢çš„flag
 
     def server_activate(self):
         """Called by constructor to activate the server.
@@ -218,7 +219,7 @@ class BaseServer:
         self.timeout. If you need to do periodic tasks, do them in
         another thread.
         """
-        self.__is_shut_down.clear()  # ÉèÖÃ Event() -> False
+        self.__is_shut_down.clear()  # è®¾ç½® Event() -> False
         try:
             # XXX: Consider using another file descriptor or connecting to the
             # socket to wake this up instead of polling. Polling reduces our
@@ -238,7 +239,7 @@ class BaseServer:
                     self.service_actions()
         finally:
             self.__shutdown_request = False
-            self.__is_shut_down.set()  # ÉèÖÃ Event() -> True
+            self.__is_shut_down.set()  # è®¾ç½® Event() -> True
 
     def shutdown(self):
         """Stops the serve_forever loop.
@@ -247,7 +248,7 @@ class BaseServer:
         serve_forever() is running in another thread, or it will
         deadlock.
         """
-        self.__shutdown_request = True  # ÉèÖÃTrueºóÂÖÑ¯¼´½«¹Ø±Õ¡£È»ºóserver_forever´¥·¢set¼¤»î´Ë´¦¼ÌĞø½øĞĞ
+        self.__shutdown_request = True  # è®¾ç½®Trueåè½®è¯¢å³å°†å…³é—­ã€‚ç„¶åserver_foreverè§¦å‘setæ¿€æ´»æ­¤å¤„ç»§ç»­è¿›è¡Œ
         self.__is_shut_down.wait()
 
     def service_actions(self):
@@ -269,7 +270,7 @@ class BaseServer:
     # - finish_request() instantiates the request handler class; this
     #   constructor will handle the request all by itself
 
-    def handle_request(self):  # ×î¸ß¼¶µÄ´¦Àírequest£¬µ«ÊÇÕâ¸öÃ²ËÆÖ»´¦ÀíÒ»´Î¾ÍoverÁË
+    def handle_request(self):  # æœ€é«˜çº§çš„å¤„ç†requestï¼Œä½†æ˜¯è¿™ä¸ªè²Œä¼¼åªå¤„ç†ä¸€æ¬¡å°±overäº†
         """Handle one request, possibly blocking.
 
         Respects self.timeout.
@@ -307,12 +308,12 @@ class BaseServer:
         blocking in get_request().
         """
         try:
-            request, client_address = self.get_request()  # »ñÈ¡requestºÍµØÖ·
+            request, client_address = self.get_request()  # è·å–requestå’Œåœ°å€
         except OSError:
             return
-        if self.verify_request(request, client_address):  # ÈÏÖ¤
+        if self.verify_request(request, client_address):  # è®¤è¯
             try:
-                self.process_request(request, client_address)  # ´¦ÀírequestÇëÇó - ¿ÉÒÔÔÚ´Ë´¦¿ªÆôĞÂÏß³Ì´¦ÀíÇëÇó
+                self.process_request(request, client_address)  # å¤„ç†requestè¯·æ±‚ - å¯ä»¥åœ¨æ­¤å¤„å¼€å¯æ–°çº¿ç¨‹å¤„ç†è¯·æ±‚
             except Exception:
                 self.handle_error(request, client_address)
                 self.shutdown_request(request)
@@ -356,7 +357,7 @@ class BaseServer:
 
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
-        self.RequestHandlerClass(request, client_address, self)  # ÊäÈëÎªrequest¡¢µØÖ·¡¢»¹ÓĞserver±¾Éí
+        self.RequestHandlerClass(request, client_address, self)  # è¾“å…¥ä¸ºrequestã€åœ°å€ã€è¿˜æœ‰serveræœ¬èº«
 
     def shutdown_request(self, request):
         """Called to shutdown and close an individual request."""
@@ -442,13 +443,13 @@ class TCPServer(BaseServer):
 
     def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
         """Constructor.  May be extended, do not override."""
-        BaseServer.__init__(self, server_address, RequestHandlerClass)  # server_addressÊÇÓÃ»§¶¨ÒåµÄÄ¿±êµØÖ·
+        BaseServer.__init__(self, server_address, RequestHandlerClass)  # server_addressæ˜¯ç”¨æˆ·å®šä¹‰çš„ç›®æ ‡åœ°å€
         self.socket = socket.socket(self.address_family,
                                     self.socket_type)
         if bind_and_activate:
             try:
                 self.server_bind()
-                self.server_activate()  # activate the server. ¼¤»î¾ÍÊÇµ÷ÓÃ listen() Æô¶¯¼àÌı¹¦ÄÜ
+                self.server_activate()  # activate the server. æ¿€æ´»å°±æ˜¯è°ƒç”¨ listen() å¯åŠ¨ç›‘å¬åŠŸèƒ½
             except:
                 self.server_close()
                 raise
@@ -631,9 +632,9 @@ class ThreadingMixIn:
 
     # Decides how threads will act upon termination of the
     # main process
-    daemon_threads = False  # ÊØ»¤Ïß³Ì
+    daemon_threads = False  # å®ˆæŠ¤çº¿ç¨‹
     # If true, server_close() waits until all non-daemonic threads terminate.
-    block_on_close = True  # µÈ´ıËùÓĞÏß³Ì¹Ø±ÕºóÔÙ¹Ø±ÕÖ÷ÏØ´º³Ç
+    block_on_close = True  # ç­‰å¾…æ‰€æœ‰çº¿ç¨‹å…³é—­åå†å…³é—­ä¸»å¿æ˜¥åŸ
     # For non-daemonic threads, list of threading.Threading objects
     # used by server_close() to wait for all threads completion.
     _threads = None
@@ -645,13 +646,13 @@ class ThreadingMixIn:
 
         """
         try:
-            self.finish_request(request, client_address)  # Ä¬ÈÏfinish_request£¬Ö±½Óµ÷ÓÃhandler´¦ÀíÒ»´ÎÇëÇó¼´¿É
+            self.finish_request(request, client_address)  # é»˜è®¤finish_requestï¼Œç›´æ¥è°ƒç”¨handlerå¤„ç†ä¸€æ¬¡è¯·æ±‚å³å¯
         except Exception:
             self.handle_error(request, client_address)
         finally:
             self.shutdown_request(request)
 
-    def process_request(self, request, client_address):  # ¿ªÆôÒ»¸öÏß³Ì´¦ÀíĞÂµÄrequest£¬ĞÂÏß³Ìµ÷ÓÃ finish_request Íê³É¶ÔrequestµÄ´¦Àí
+    def process_request(self, request, client_address):  # å¼€å¯ä¸€ä¸ªçº¿ç¨‹å¤„ç†æ–°çš„requestï¼Œæ–°çº¿ç¨‹è°ƒç”¨ finish_request å®Œæˆå¯¹requestçš„å¤„ç†
         """Start a new thread to process the request."""
         t = threading.Thread(target=self.process_request_thread,
                              args=(request, client_address))
@@ -669,7 +670,7 @@ class ThreadingMixIn:
             self._threads = None
             if threads:
                 for thread in threads:
-                    thread.join()  # ÓÖÊÇjoin£¬µÈ´ıËùÓĞÏß³Ì½áÊø¾ÍÍêÊÂ
+                    thread.join()  # åˆæ˜¯joinï¼Œç­‰å¾…æ‰€æœ‰çº¿ç¨‹ç»“æŸå°±å®Œäº‹
 
 
 if hasattr(os, "fork"):
@@ -707,7 +708,7 @@ class BaseRequestHandler:
     constructor sets the instance variables request, client_address
     and server, and then calls the handle() method.  To implement a
     specific service, all you need to do is to derive a class which
-    defines a handle() method. -> ÄãĞèÒª×öµÄ¾ÍÊÇÅÉÉúÒ»¸öÀà£¬²¢¶¨Òåhandle()·½·¨
+    defines a handle() method. -> ä½ éœ€è¦åšçš„å°±æ˜¯æ´¾ç”Ÿä¸€ä¸ªç±»ï¼Œå¹¶å®šä¹‰handle()æ–¹æ³•
 
     The handle() method can find the request as self.request, the
     client address as self.client_address, and the server (in case it
@@ -774,7 +775,7 @@ class StreamRequestHandler(BaseRequestHandler):
                                        socket.TCP_NODELAY, True)
         self.rfile = self.connection.makefile('rb', self.rbufsize)
         if self.wbufsize == 0:
-            self.wfile = _SocketWriter(self.connection)  # ÀÏÀÏÊµÊµµÄsendall£¬¾Í²»ÏãÂï
+            self.wfile = _SocketWriter(self.connection)  # è€è€å®å®çš„sendallï¼Œå°±ä¸é¦™å˜›
         else:
             self.wfile = self.connection.makefile('wb', self.wbufsize)
 
