@@ -152,7 +152,7 @@ class _localimpl:
         # The key used in the Thread objects' attribute dicts.
         # We keep it a string for speed but make it unlikely to clash with
         # a "real" attribute.
-        self.key = '_threading_local._localimpl.' + str(id(self))  # 每个线程的唯一key
+        self.key = '_threading_local._localimpl.' + str(id(self))  # 每个local唯一key
         # { id(Thread) -> (ref(Thread), thread-local dict) }
         self.dicts = {}
 
@@ -169,11 +169,12 @@ class _localimpl:
         key = self.key
         thread = current_thread()
         idt = id(thread)
+        # 这两个弱引用的回调函数，有点意思哦
         def local_deleted(_, key=key):
             # When the localimpl is deleted, remove the thread attribute.
             thread = wrthread()
             if thread is not None:
-                del thread.__dict__[key]
+                del thread.__dict__[key]  # 对于local来说，没有了引用，只需要删除唯一指定的key即可
         def thread_deleted(_, idt=idt):
             # When the thread is deleted, remove the local dict.
             # Note that this is suboptimal if the thread object gets
@@ -181,11 +182,10 @@ class _localimpl:
             # as soon as the OS-level thread ends instead.
             local = wrlocal()
             if local is not None:
-                dct = local.dicts.pop(idt)
-        wrlocal = ref(self, local_deleted)
-        wrthread = ref(thread, thread_deleted)
-        thread.__dict__[key] = wrlocal  # 当前线程的字典里面应该是有东西的啊，哪去了?
-        # print(thread.__dict__)
+                local.dicts.pop(idt)
+        wrlocal = ref(self, local_deleted)  # 针对local的弱引用
+        wrthread = ref(thread, thread_deleted)  # 针对当前线程的弱引用
+        thread.__dict__[key] = wrlocal  # 每一个线程都需要保留当前唯一的local，key是根据local来定的唯一
         # print(id(thread), '-------123--------')
         self.dicts[idt] = wrthread, localdict  # 当前线程的弱引用，local字典
         return localdict
@@ -200,7 +200,6 @@ def _patch(self):
         dct = impl.create_dict()  # 返回注册了的字典。这里是一个空的字典把
         args, kw = impl.localargs
         self.__init__(*args, **kw)  # 实例化???? 这是何道理???
-        print(help(self))
     with impl.locallock:
         object.__setattr__(self, '__dict__', dct)
         yield

@@ -11,16 +11,17 @@ class Local(_threading_local.local):
 
 print(id(threading.current_thread()), 'This is the main-thread')
 ll = Local()
-
+# print('1111', threading.current_thread().__dict__)
 
 def process(data1, data2):
     # print(threading.current_thread().__dict__)
     # print('##################')
     ll.argv1 = data1  # 在进行赋值的时候会报错
     ll.argv2 = data2
+    # print('2222', threading.current_thread().__dict__)
     # print('##################')
     # print(ll.__dict__)
-    # print(ll._local__impl)
+    print(ll._local__impl.dicts)
     print(f"{threading.get_ident()}-{data1}-{data2}-before")
     time.sleep(1)
     show()
@@ -33,8 +34,8 @@ def show():
 if __name__ == '__main__':
     data = [
         ['cza', 'sg'],
-        # ['ha', 'good'],
-        # ['whats', 'ready']
+        ['ha', 'good'],
+        ['whats', 'ready']
     ]
 
 
