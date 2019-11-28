@@ -357,14 +357,16 @@ class RequestContext(object):
         # functionality is not active in production environments.
         top = _request_ctx_stack.top
         if top is not None and top.preserved:
+            # print('我想看到这句话!!!!!')
             top.pop(top._preserved_exc)
 
         # Before we push the request context we have to ensure that there
         # is an application context.
         app_ctx = _app_ctx_stack.top  # 就是说正常情况下top/app_ctx应该是None咯
+        # print(top, app_ctx)  # None None -- 初始都是来年各个None
         if app_ctx is None or app_ctx.app != self.app:
-            app_ctx = self.app.app_context()
-            app_ctx.push()
+            app_ctx = self.app.app_context()  # 创建一个新的appContext
+            app_ctx.push()  # 腿带stack里面咯
             self._implicit_app_ctx_stack.append(app_ctx)
         else:
             self._implicit_app_ctx_stack.append(None)
@@ -395,7 +397,7 @@ class RequestContext(object):
         .. versionchanged:: 0.9
            Added the `exc` argument.
         """
-        app_ctx = self._implicit_app_ctx_stack.pop()
+        app_ctx = self._implicit_app_ctx_stack.pop()  # 这个是本对象自己保存的一份app
 
         try:
             clear_request = False
@@ -427,12 +429,14 @@ class RequestContext(object):
 
             # Get rid of the app as well if necessary.
             if app_ctx is not None:
-                app_ctx.pop(exc)
-
+                # print(app_ctx, exc, app_ctx.pop(exc))  # None
+                app_ctx.pop(exc)  # 我怎么就能保证最后一个就是我自己的属性呢
+            # 在这里加一个断言，不是删除的不是自己就gg?
             assert rv is self, 'Popped wrong request context.  ' \
                                '(%r instead of %r)' % (rv, self)
 
     def auto_pop(self, exc):
+        # print(exc)  # None
         if self.request.environ.get('flask._preserve_context') or \
                 (exc is not None and self.app.preserve_context_on_exception):
             self.preserved = True

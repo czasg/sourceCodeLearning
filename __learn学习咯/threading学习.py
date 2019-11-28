@@ -2,7 +2,7 @@
 import threading
 import time
 import _threading_local
-from greenlet import getcurrent
+# from greenlet import getcurrent
 from werkzeug.local import LocalStack, LocalProxy
 
 
@@ -33,30 +33,31 @@ def process(data1, data2):
 
 
 def show():
-    print(f"{threading.get_ident()}-{ll.argv1}-{ll.argv2}-after")
+    # 像这样使用 ll._local__impl.dicts 就可以查询到其他线程的变量了
+    print(f"{threading.get_ident()}-{ll.argv1}-{ll.argv2}-after-{ll._local__impl.dicts}")
 
 
 if __name__ == '__main__':
-    aa = LocalStack()
-    aa.push(123)
-    print(aa.top)
-    aa.push(12)
-    print(aa.top)
-    aa.push(456)
-    print(aa.top)
-    print(aa.pop())
-    print(aa.pop())
-    print(aa.pop())
+    # aa = LocalStack()
+    # aa.push(123)
+    # print(aa.top)
+    # aa.push(12)
+    # print(aa.top)
+    # aa.push(456)
+    # print(aa.top)
+    # print(aa.pop())
+    # print(aa.pop())
+    # print(aa.pop())
 
     # print(getcurrent(), id(threading.current_thread()))
-    # data = [
-    #     ['cza', 'sg'],
-    #     ['ha', 'good'],
-    #     ['whats', 'ready']
-    # ]
+    data = [
+        ['cza', 'sg'],
+        ['ha', 'good'],
+        ['whats', 'ready']
+    ]
 
-    # for d in data:
-    #     threading.Thread(target=process, args=d).start()
+    for d in data:
+        threading.Thread(target=process, args=d).start()
 
     # class Test:
     #     pass

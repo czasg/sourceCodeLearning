@@ -2306,7 +2306,8 @@ class Flask(_PackageBoundObject):
             a list of headers, and an optional exception context to
             start the response.
         """
-        ctx = self.request_context(environ)  # 这里???上下文管理器???
+        # print(_request_ctx_stack._local.__storage__)
+        ctx = self.request_context(environ)  # 申请一个新的RequestContext
         error = None
         try:
             try:
@@ -2322,6 +2323,7 @@ class Flask(_PackageBoundObject):
         finally:
             if self.should_ignore_error(error):
                 error = None
+            # print(error)  # None
             ctx.auto_pop(error)
 
     def __call__(self, environ, start_response):

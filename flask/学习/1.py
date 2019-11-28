@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, \
     jsonify, \
     url_for, \
@@ -11,12 +13,14 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 @app.route('/')
 def test():
+    time.sleep(3)
     return "Hello World!"
 
 
 @app.route('/hello')
 @app.route('/hello/<name>')
 def hello(name=None):  # 原来这里是需要传入传输的啊
+    time.sleep(3)
     return render_template("hello.html", name=(name or "young man"))
 
 
@@ -41,6 +45,7 @@ def news_classify():
 
 @app.route('/login')
 def login():
+    time.sleep(3)
     username = request.args.get('username', "")
     if username:
         session['username'] = username  # app.secret_key

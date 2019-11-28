@@ -94,7 +94,7 @@ class Local(object):
             raise AttributeError(name)
 
 
-class LocalStack(object):
+class LocalStack(object):  # 对于request来说这个是唯一的
 
     """This class works similar to a :class:`Local` but keeps a stack
     of objects instead.  This is best explained with an example::
@@ -129,7 +129,7 @@ class LocalStack(object):
     """
 
     def __init__(self):
-        self._local = Local()
+        self._local = Local()  # 这个应该也没饿问题
 
     def __release_local__(self):
         self._local.__release_local__()
