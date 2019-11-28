@@ -16,7 +16,7 @@ def test():
 
 @app.route('/hello')
 @app.route('/hello/<name>')
-def hello(name=None):
+def hello(name=None):  # 原来这里是需要传入传输的啊
     return render_template("hello.html", name=(name or "young man"))
 
 
@@ -75,6 +75,7 @@ if __name__ == '__main__':
         print(url_for("test", next="cza"))
         print(url_for("news_classify"))
         print(url_for("static", filename="style.css"))
+
 
 """
 request.form.get('username', '')  => POST form_data

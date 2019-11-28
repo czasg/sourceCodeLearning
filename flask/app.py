@@ -54,16 +54,18 @@ def setupmethod(f):  # 这尼玛就是一个装饰器啊，还不如单纯的fun
     """Wraps a method so that it performs a check in debug mode if the
     first request was already handled.
     """
+
     def wrapper_func(self, *args, **kwargs):
         if self.debug and self._got_first_request:
             raise AssertionError('A setup function was called after the '
-                'first request was handled.  This usually indicates a bug '
-                'in the application where a module was not imported '
-                'and decorators or other functionality was called too late.\n'
-                'To fix this make sure to import all your view modules, '
-                'database models and everything related at a central place '
-                'before the application starts serving requests.')
+                                 'first request was handled.  This usually indicates a bug '
+                                 'in the application where a module was not imported '
+                                 'and decorators or other functionality was called too late.\n'
+                                 'To fix this make sure to import all your view modules, '
+                                 'database models and everything related at a central place '
+                                 'before the application starts serving requests.')
         return f(self, *args, **kwargs)
+
     return update_wrapper(wrapper_func, f)
 
 
@@ -240,7 +242,7 @@ class Flask(_PackageBoundObject):
     #: ``PERMANENT_SESSION_LIFETIME`` configuration key.  Defaults to
     #: ``timedelta(days=31)``
     permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME',
-        get_converter=_make_timedelta)
+                                                 get_converter=_make_timedelta)
 
     #: A :class:`~datetime.timedelta` which is used as default cache_timeout
     #: for the :func:`send_file` functions. The default is 12 hours.
@@ -250,7 +252,7 @@ class Flask(_PackageBoundObject):
     #: variable can also be set with an integer value used as seconds.
     #: Defaults to ``timedelta(hours=12)``
     send_file_max_age_default = ConfigAttribute('SEND_FILE_MAX_AGE_DEFAULT',
-        get_converter=_make_timedelta)
+                                                get_converter=_make_timedelta)
 
     #: Enable this if you want to use the X-Sendfile feature.  Keep in
     #: mind that the server has to support this.  This only affects files
@@ -279,34 +281,34 @@ class Flask(_PackageBoundObject):
 
     #: Default configuration parameters.
     default_config = ImmutableDict({
-        'ENV':                                  None,
-        'DEBUG':                                None,
-        'TESTING':                              False,
-        'PROPAGATE_EXCEPTIONS':                 None,
-        'PRESERVE_CONTEXT_ON_EXCEPTION':        None,
-        'SECRET_KEY':                           None,
-        'PERMANENT_SESSION_LIFETIME':           timedelta(days=31),
-        'USE_X_SENDFILE':                       False,
-        'SERVER_NAME':                          None,
-        'APPLICATION_ROOT':                     '/',
-        'SESSION_COOKIE_NAME':                  'session',
-        'SESSION_COOKIE_DOMAIN':                None,
-        'SESSION_COOKIE_PATH':                  None,
-        'SESSION_COOKIE_HTTPONLY':              True,
-        'SESSION_COOKIE_SECURE':                False,
-        'SESSION_COOKIE_SAMESITE':              None,
-        'SESSION_REFRESH_EACH_REQUEST':         True,
-        'MAX_CONTENT_LENGTH':                   None,
-        'SEND_FILE_MAX_AGE_DEFAULT':            timedelta(hours=12),
-        'TRAP_BAD_REQUEST_ERRORS':              None,
-        'TRAP_HTTP_EXCEPTIONS':                 False,
-        'EXPLAIN_TEMPLATE_LOADING':             False,
-        'PREFERRED_URL_SCHEME':                 'http',
-        'JSON_AS_ASCII':                        True,
-        'JSON_SORT_KEYS':                       True,
-        'JSONIFY_PRETTYPRINT_REGULAR':          False,
-        'JSONIFY_MIMETYPE':                     'application/json',
-        'TEMPLATES_AUTO_RELOAD':                None,
+        'ENV': None,
+        'DEBUG': None,
+        'TESTING': False,
+        'PROPAGATE_EXCEPTIONS': None,
+        'PRESERVE_CONTEXT_ON_EXCEPTION': None,
+        'SECRET_KEY': None,
+        'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
+        'USE_X_SENDFILE': False,
+        'SERVER_NAME': None,
+        'APPLICATION_ROOT': '/',
+        'SESSION_COOKIE_NAME': 'session',
+        'SESSION_COOKIE_DOMAIN': None,
+        'SESSION_COOKIE_PATH': None,
+        'SESSION_COOKIE_HTTPONLY': True,
+        'SESSION_COOKIE_SECURE': False,
+        'SESSION_COOKIE_SAMESITE': None,
+        'SESSION_REFRESH_EACH_REQUEST': True,
+        'MAX_CONTENT_LENGTH': None,
+        'SEND_FILE_MAX_AGE_DEFAULT': timedelta(hours=12),
+        'TRAP_BAD_REQUEST_ERRORS': None,
+        'TRAP_HTTP_EXCEPTIONS': False,
+        'EXPLAIN_TEMPLATE_LOADING': False,
+        'PREFERRED_URL_SCHEME': 'http',
+        'JSON_AS_ASCII': True,
+        'JSON_SORT_KEYS': True,
+        'JSONIFY_PRETTYPRINT_REGULAR': False,
+        'JSONIFY_MIMETYPE': 'application/json',
+        'TEMPLATES_AUTO_RELOAD': None,
         'MAX_COOKIE_SIZE': 4093,
     })
 
@@ -351,17 +353,17 @@ class Flask(_PackageBoundObject):
     root_path = None
 
     def __init__(
-        self,
-        import_name,
-        static_url_path=None,
-        static_folder='static',
-        static_host=None,
-        host_matching=False,
-        subdomain_matching=False,
-        template_folder='templates',
-        instance_path=None,
-        instance_relative_config=False,
-        root_path=None
+            self,
+            import_name,
+            static_url_path=None,
+            static_folder='static',
+            static_host=None,
+            host_matching=False,
+            subdomain_matching=False,
+            template_folder='templates',
+            instance_path=None,
+            instance_relative_config=False,
+            root_path=None
     ):
         _PackageBoundObject.__init__(
             self,
@@ -1101,11 +1103,11 @@ class Flask(_PackageBoundObject):
 
         if blueprint.name in self.blueprints:
             assert self.blueprints[blueprint.name] is blueprint, (
-                'A name collision occurred between blueprints %r and %r. Both'
-                ' share the same name "%s". Blueprints that are created on the'
-                ' fly need unique names.' % (
-                    blueprint, self.blueprints[blueprint.name], blueprint.name
-                )
+                    'A name collision occurred between blueprints %r and %r. Both'
+                    ' share the same name "%s". Blueprints that are created on the'
+                    ' fly need unique names.' % (
+                        blueprint, self.blueprints[blueprint.name], blueprint.name
+                    )
             )
         else:
             self.blueprints[blueprint.name] = blueprint
@@ -1198,7 +1200,7 @@ class Flask(_PackageBoundObject):
         # force-enable the automatic options handling.
         if provide_automatic_options is None:
             provide_automatic_options = getattr(view_func,
-                'provide_automatic_options', None)
+                                                'provide_automatic_options', None)
 
         if provide_automatic_options is None:
             if 'OPTIONS' not in methods:
@@ -1212,7 +1214,7 @@ class Flask(_PackageBoundObject):
 
         rule = self.url_rule_class(rule, methods=methods, **options)
         rule.provide_automatic_options = provide_automatic_options
-
+        # print(rule)
         self.url_map.add(rule)
         if view_func is not None:
             old_func = self.view_functions.get(endpoint)
@@ -1245,10 +1247,12 @@ class Flask(_PackageBoundObject):
                         Starting with Flask 0.6, ``OPTIONS`` is implicitly
                         added and handled by the standard request handling.
         """
+
         def decorator(f):
             endpoint = options.pop('endpoint', None)
             self.add_url_rule(rule, endpoint, f, **options)
             return f
+
         return decorator
 
     @setupmethod
@@ -1262,9 +1266,11 @@ class Flask(_PackageBoundObject):
 
         :param endpoint: the name of the endpoint
         """
+
         def decorator(f):
             self.view_functions[endpoint] = f
             return f
+
         return decorator
 
     @staticmethod
@@ -1312,9 +1318,11 @@ class Flask(_PackageBoundObject):
         :param code_or_exception: the code as integer for the handler, or
                                   an arbitrary exception
         """
+
         def decorator(f):
             self._register_error_handler(None, code_or_exception, f)
             return f
+
         return decorator
 
     @setupmethod
@@ -1365,9 +1373,11 @@ class Flask(_PackageBoundObject):
         :param name: the optional name of the filter, otherwise the
                      function name will be used.
         """
+
         def decorator(f):
             self.add_template_filter(f, name=name)
             return f
+
         return decorator
 
     @setupmethod
@@ -1400,9 +1410,11 @@ class Flask(_PackageBoundObject):
         :param name: the optional name of the test, otherwise the
                      function name will be used.
         """
+
         def decorator(f):
             self.add_template_test(f, name=name)
             return f
+
         return decorator
 
     @setupmethod
@@ -1432,9 +1444,11 @@ class Flask(_PackageBoundObject):
         :param name: the optional name of the global function, otherwise the
                      function name will be used.
         """
+
         def decorator(f):
             self.add_template_global(f, name=name)
             return f
+
         return decorator
 
     @setupmethod
@@ -1612,8 +1626,8 @@ class Flask(_PackageBoundObject):
         exc_class, code = self._get_exc_class_and_code(type(e))
 
         for name, c in (
-            (request.blueprint, code), (None, code),
-            (request.blueprint, None), (None, None)
+                (request.blueprint, code), (None, code),
+                (request.blueprint, None), (None, None)
         ):
             handler_map = self.error_handler_spec.setdefault(name, {}).get(c)
 
@@ -1667,8 +1681,8 @@ class Flask(_PackageBoundObject):
 
         # if unset, trap key errors in debug mode
         if (
-            trap_bad_request is None and self.debug
-            and isinstance(e, BadRequestKeyError)
+                trap_bad_request is None and self.debug
+                and isinstance(e, BadRequestKeyError)
         ):
             return True
 
@@ -1702,10 +1716,10 @@ class Flask(_PackageBoundObject):
         # when generating the response message. Set an informative
         # description for key errors in debug mode or when trapping errors.
         if (
-            (self.debug or self.config['TRAP_BAD_REQUEST_ERRORS'])
-            and isinstance(e, BadRequestKeyError)
-            # only set it if it's still the default description
-            and e.description is BadRequestKeyError.description
+                (self.debug or self.config['TRAP_BAD_REQUEST_ERRORS'])
+                and isinstance(e, BadRequestKeyError)
+                # only set it if it's still the default description
+                and e.description is BadRequestKeyError.description
         ):
             e.description = "KeyError: '{0}'".format(*e.args)
 
@@ -1769,8 +1783,8 @@ class Flask(_PackageBoundObject):
         :internal:
         """
         if not self.debug \
-           or not isinstance(request.routing_exception, RequestRedirect) \
-           or request.method in ('GET', 'HEAD', 'OPTIONS'):
+                or not isinstance(request.routing_exception, RequestRedirect) \
+                or request.method in ('GET', 'HEAD', 'OPTIONS'):
             raise request.routing_exception
 
         from .debughelpers import FormDataRoutingRedirect
@@ -1786,16 +1800,22 @@ class Flask(_PackageBoundObject):
            This no longer does the exception handling, this code was
            moved to the new :meth:`full_dispatch_request`.
         """
-        req = _request_ctx_stack.top.request
+        req = _request_ctx_stack.top.request  # 当前线程上下文环境
         if req.routing_exception is not None:
             self.raise_routing_exception(req)
         rule = req.url_rule
         # if we provide automatic options for this URL and the
         # request came with the OPTIONS method, reply automatically
+        # print(getattr(rule, 'provide_automatic_options', False))
         if getattr(rule, 'provide_automatic_options', False) \
-           and req.method == 'OPTIONS':
+                and req.method == 'OPTIONS':
             return self.make_default_options_response()
         # otherwise dispatch to the handler for that endpoint
+        # from pprint import pprint
+        # pprint(self.view_functions)  # 原来如此，也没什么高级的写法啊。映射所有的func和endpoint到这张子带你
+        # print(req.view_args)
+        # print(self.view_functions[rule.endpoint])  # 这个就是开发对应写的目标函数了，但是后面穿的子带你是几个意思
+        # print(self.view_functions[rule.endpoint](**req.view_args))  # 好吧，原来是需要传值的
         return self.view_functions[rule.endpoint](**req.view_args)
 
     def full_dispatch_request(self):
@@ -1810,12 +1830,12 @@ class Flask(_PackageBoundObject):
             request_started.send(self)
             rv = self.preprocess_request()
             if rv is None:
-                rv = self.dispatch_request()
+                rv = self.dispatch_request()  # 此处拿到的就是目标函数返回的结果了
         except Exception as e:
             rv = self.handle_user_exception(e)
         return self.finalize_request(rv)
 
-    def finalize_request(self, rv, from_error_handler=False):
+    def finalize_request(self, rv, from_error_handler=False):  # finalize -> 完成
         """Given the return value from a view function this finalizes
         the request by converting it into a response and invoking the
         postprocessing functions.  This is invoked for both normal
@@ -1828,7 +1848,7 @@ class Flask(_PackageBoundObject):
 
         :internal:
         """
-        response = self.make_response(rv)
+        response = self.make_response(rv)  # 其实就是把对应的request用response包装一下就对了
         try:
             response = self.process_response(response)
             request_finished.send(self, response=response)
@@ -2072,8 +2092,7 @@ class Flask(_PackageBoundObject):
         further request handling is stopped.
         """
 
-        bp = _request_ctx_stack.top.request.blueprint
-
+        bp = _request_ctx_stack.top.request.blueprint  # None
         funcs = self.url_value_preprocessors.get(None, ())
         if bp is not None and bp in self.url_value_preprocessors:
             funcs = chain(funcs, self.url_value_preprocessors[bp])
@@ -2101,7 +2120,8 @@ class Flask(_PackageBoundObject):
         :return: a new response object or the same, has to be an
                  instance of :attr:`response_class`.
         """
-        ctx = _request_ctx_stack.top
+        ctx = _request_ctx_stack.top  # 返回线程上下文变量request
+        # print(ctx, id(ctx), id(self))
         bp = ctx.request.blueprint
         funcs = ctx._after_request_functions
         if bp is not None and bp in self.after_request_funcs:
@@ -2185,7 +2205,9 @@ class Flask(_PackageBoundObject):
 
         .. versionadded:: 0.9
         """
-        return AppContext(self)
+        # from threading import current_thread
+        # print(id(current_thread()), id(self))
+        return AppContext(self)  # 线程不是一个线程，但是self都是同一个app
 
     def request_context(self, environ):
         """Create a :class:`~flask.ctx.RequestContext` representing a

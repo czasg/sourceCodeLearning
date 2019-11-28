@@ -18,12 +18,11 @@ from .globals import _request_ctx_stack, _app_ctx_stack
 from .signals import appcontext_pushed, appcontext_popped
 from ._compat import BROKEN_PYPY_CTXMGR_EXIT, reraise
 
-
 # a singleton sentinel value for parameter defaults
 _sentinel = object()
 
 
-class _AppCtxGlobals(object):
+class _AppCtxGlobals(object):  # 全局参数 g，在app里面有引用，但实例化是在AppContext()里面
     """A plain object. Used as a namespace for storing data during an
     application context.
 
@@ -144,12 +143,14 @@ def copy_current_request_context(f):
     top = _request_ctx_stack.top
     if top is None:
         raise RuntimeError('This decorator can only be used at local scopes '
-            'when a request context is on the stack.  For instance within '
-            'view functions.')
+                           'when a request context is on the stack.  For instance within '
+                           'view functions.')
     reqctx = top.copy()
+
     def wrapper(*args, **kwargs):
         with reqctx:
             return f(*args, **kwargs)
+
     return update_wrapper(wrapper, f)
 
 
@@ -205,9 +206,10 @@ class AppContext(object):
     """
 
     def __init__(self, app):
-        self.app = app
+        self.app = app  # app 似乎都是同一个
         self.url_adapter = app.create_url_adapter(None)
-        self.g = app.app_ctx_globals_class()
+        self.g = app.app_ctx_globals_class()  # g就不是了,每次偶创建了一个新的_AppCtxGlobals对象
+        # print(f"app'id is {id(app)}, self'id is {id(self)}. g'is is {id(self.g)}")
 
         # Like request context, app contexts can be pushed multiple times
         # but there a basic "refcount" is enough to track them.
@@ -232,7 +234,7 @@ class AppContext(object):
         finally:
             rv = _app_ctx_stack.pop()
         assert rv is self, 'Popped wrong app context.  (%r instead of %r)' \
-            % (rv, self)
+                           % (rv, self)
         appcontext_popped.send(self.app)
 
     def __enter__(self):
@@ -279,6 +281,9 @@ class RequestContext(object):
     def __init__(self, app, environ, request=None):
         self.app = app
         if request is None:
+            # 底层所有的信息都存在environ里面
+            # 所以我们每一次调用全局request，其实都没有关系。因为是无状态无连接的情况
+            # 只要每一次传来的符合我代码的逻辑，就可以了
             request = app.request_class(environ)
         self.request = request
         self.url_adapter = app.create_url_adapter(self.request)
@@ -308,8 +313,10 @@ class RequestContext(object):
 
     def _get_g(self):
         return _app_ctx_stack.top.g
+
     def _set_g(self, value):
         _app_ctx_stack.top.g = value
+
     g = property(_get_g, _set_g)
     del _get_g, _set_g
 
@@ -323,9 +330,9 @@ class RequestContext(object):
         .. versionadded:: 0.10
         """
         return self.__class__(self.app,
-            environ=self.request.environ,
-            request=self.request
-        )
+                              environ=self.request.environ,
+                              request=self.request
+                              )
 
     def match_request(self):
         """Can be overridden by a subclass to hook into the matching
@@ -354,7 +361,7 @@ class RequestContext(object):
 
         # Before we push the request context we have to ensure that there
         # is an application context.
-        app_ctx = _app_ctx_stack.top
+        app_ctx = _app_ctx_stack.top  # 就是说正常情况下top/app_ctx应该是None咯
         if app_ctx is None or app_ctx.app != self.app:
             app_ctx = self.app.app_context()
             app_ctx.push()
@@ -423,11 +430,11 @@ class RequestContext(object):
                 app_ctx.pop(exc)
 
             assert rv is self, 'Popped wrong request context.  ' \
-                '(%r instead of %r)' % (rv, self)
+                               '(%r instead of %r)' % (rv, self)
 
     def auto_pop(self, exc):
         if self.request.environ.get('flask._preserve_context') or \
-           (exc is not None and self.app.preserve_context_on_exception):
+                (exc is not None and self.app.preserve_context_on_exception):
             self.preserved = True
             self._preserved_exc = exc
         else:

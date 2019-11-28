@@ -49,21 +49,29 @@ def release_local(local):
 
 
 class Local(object):
+    """
+        >>> from werkzeug.local import Local
+        >>> l = Local()
+
+        # these are proxies
+        >>> request = l('request')
+        >>> user = l('user')  # 调用LocalProxy(self, proxy)
+    """
     __slots__ = ('__storage__', '__ident_func__')
 
-    def __init__(self):
+    def __init__(self):  # 初始化设置两个属性，一个用来装上下文环境，一个用来调用当前线程id的
         object.__setattr__(self, '__storage__', {})
         object.__setattr__(self, '__ident_func__', get_ident)
 
     def __iter__(self):
-        return iter(self.__storage__.items())
+        return iter(self.__storage__.items())  # 迭代自身的环境属性
 
     def __call__(self, proxy):
         """Create a proxy for a name."""
         return LocalProxy(self, proxy)
 
     def __release_local__(self):
-        self.__storage__.pop(self.__ident_func__(), None)
+        self.__storage__.pop(self.__ident_func__(), None)  # 调用就是pop当前线程的参数，可以的
 
     def __getattr__(self, name):
         try:
@@ -103,6 +111,12 @@ class LocalStack(object):
         >>> ls.top
         42
 
+        >>> from werkzeug.local import LocalStack
+        >>> _response_local = LocalStack()
+
+        # this is a proxy
+        >>> response = _response_local()
+
     They can be force released by using a :class:`LocalManager` or with
     the :func:`release_local` function but the correct way is to pop the
     item from the stack after using.  When the stack is empty it will
@@ -134,7 +148,7 @@ class LocalStack(object):
             if rv is None:
                 raise RuntimeError('object unbound')
             return rv
-        return LocalProxy(_lookup)
+        return LocalProxy(_lookup)  # 也就是说代理是默认选top咯
 
     def push(self, obj):
         """Pushes a new item to the stack"""
