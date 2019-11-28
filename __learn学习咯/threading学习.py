@@ -2,6 +2,8 @@
 import threading
 import time
 import _threading_local
+from greenlet import getcurrent
+from werkzeug.local import LocalStack, LocalProxy
 
 
 class Local(_threading_local.local):
@@ -9,8 +11,11 @@ class Local(_threading_local.local):
     argv2 = None
 
 
-print(id(threading.current_thread()), 'This is the main-thread')
+# print(id(threading.current_thread()), 'This is the main-thread')
 ll = Local()
+ll.cza_test = "cza_test"
+
+
 # print('1111', threading.current_thread().__dict__)
 
 def process(data1, data2):
@@ -21,7 +26,7 @@ def process(data1, data2):
     # print('2222', threading.current_thread().__dict__)
     # print('##################')
     # print(ll.__dict__)
-    print(ll._local__impl.dicts)
+    # print(ll._local__impl.dicts)
     print(f"{threading.get_ident()}-{data1}-{data2}-before")
     time.sleep(1)
     show()
@@ -32,15 +37,26 @@ def show():
 
 
 if __name__ == '__main__':
-    data = [
-        ['cza', 'sg'],
-        ['ha', 'good'],
-        ['whats', 'ready']
-    ]
+    aa = LocalStack()
+    aa.push(123)
+    print(aa.top)
+    aa.push(12)
+    print(aa.top)
+    aa.push(456)
+    print(aa.top)
+    print(aa.pop())
+    print(aa.pop())
+    print(aa.pop())
 
+    # print(getcurrent(), id(threading.current_thread()))
+    # data = [
+    #     ['cza', 'sg'],
+    #     ['ha', 'good'],
+    #     ['whats', 'ready']
+    # ]
 
-    for d in data:
-        threading.Thread(target=process, args=d).start()
+    # for d in data:
+    #     threading.Thread(target=process, args=d).start()
 
     # class Test:
     #     pass
