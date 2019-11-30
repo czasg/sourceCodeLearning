@@ -35,3 +35,9 @@ class UrlLengthMiddleware(object):
                 return True
 
         return (r for r in result or () if _filter(r))
+
+
+"""
+过滤url长度的机制. 原来还有这种操作. 神奇了我的哥
+
+"""

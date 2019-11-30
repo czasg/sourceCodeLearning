@@ -34,7 +34,7 @@ class HttpErrorMiddleware(object):
         meta = response.meta
         if 'handle_httpstatus_all' in meta:
             return
-        if 'handle_httpstatus_list' in meta:
+        if 'handle_httpstatus_list' in meta:  # 原来可以通过meta传递允许的错误类型。而不需要设置全局值
             allowed_statuses = meta['handle_httpstatus_list']
         elif self.handle_httpstatus_all:
             return
@@ -49,7 +49,7 @@ class HttpErrorMiddleware(object):
             spider.crawler.stats.inc_value('httperror/response_ignored_count')
             spider.crawler.stats.inc_value(
                 'httperror/response_ignored_status_count/%s' % response.status
-            )
+            )  # 针对每种错误的类型进行统计
             logger.info(
                 "Ignoring response %(response)r: HTTP status code is not handled or not allowed",
                 {'response': response}, extra={'spider': spider},

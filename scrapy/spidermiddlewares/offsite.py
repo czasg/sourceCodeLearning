@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class OffsiteMiddleware(object):
+    """
+    这玩意原来是一个统计过滤以及执行allowed_domains过滤的地方
+    """
 
     def __init__(self, stats):
         self.stats = stats
@@ -29,7 +32,7 @@ class OffsiteMiddleware(object):
         for x in result:
             if isinstance(x, Request):
                 if x.dont_filter or self.should_follow(x, spider):
-                    yield x
+                    yield x  # 如果指定了dont_filter，或者该Request符合allowed_domains。则可以通过
                 else:
                     domain = urlparse_cached(x).hostname
                     if domain and domain not in self.domains_seen:
@@ -70,3 +73,11 @@ class OffsiteMiddleware(object):
 
 class URLWarning(Warning):
     pass
+
+
+"""
+OffsiteMiddleware
+平常看到的统计过滤的，就是这里实现的
+该中间件也是实现 allowed_domains 过滤的主要类
+原来还统计了domains这个呀，可以的
+"""
