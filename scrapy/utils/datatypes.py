@@ -236,7 +236,7 @@ class CaselessDict(dict):
         return dict.pop(self, self.normkey(key), *args)
 
 
-class MergeDict(object):
+class MergeDict(object):  # 所谓的merge-dict只是在多个字典之间进行操作。实际还是没有合并的
     """
     A simple class for creating new "virtual" dictionaries that actually look
     up values in more than one dictionary, passed in the constructor.

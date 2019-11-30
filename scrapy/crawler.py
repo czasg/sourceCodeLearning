@@ -324,7 +324,7 @@ def _get_spider_loader(settings):
             'Please use SPIDER_LOADER_CLASS.',
             category=ScrapyDeprecationWarning, stacklevel=2
         )
-    cls_path = settings.get('SPIDER_MANAGER_CLASS',
+    cls_path = settings.get('SPIDER_MANAGER_CLASS',  # 看来还是有限推荐使用管理类
                             settings.get('SPIDER_LOADER_CLASS'))  # SPIDER_LOADER_CLASS = 'scrapy.spiderloader.SpiderLoader'  # zty就是该的这里咯
     loader_cls = load_object(cls_path)
     try:
