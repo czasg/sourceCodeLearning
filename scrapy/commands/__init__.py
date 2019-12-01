@@ -58,7 +58,7 @@ class ScrapyCommand(object):
         """
         group = OptionGroup(parser, "Global Options")
         group.add_option("--logfile", metavar="FILE",
-            help="log file. if omitted stderr will be used")
+            help="log file. if omitted stderr will be used")  # 这玩意有啥用
         group.add_option("-L", "--loglevel", metavar="LEVEL", default=None,
             help="log level (default: %s)" % self.settings['LOG_LEVEL'])
         group.add_option("--nolog", action="store_true",
@@ -66,9 +66,9 @@ class ScrapyCommand(object):
         group.add_option("--profile", metavar="FILE", default=None,
             help="write python cProfile stats to FILE")
         group.add_option("--pidfile", metavar="FILE",
-            help="write process ID to FILE")
+            help="write process ID to FILE")  # 怕刘爬虫进程的ID-有啥用呢--这
         group.add_option("-s", "--set", action="append", default=[], metavar="NAME=VALUE",
-            help="set/override setting (may be repeated)")
+            help="set/override setting (may be repeated)")  # 原来-s是这个意思啊，代表set
         group.add_option("--pdb", action="store_true", help="enable pdb on failure")
 
         parser.add_option_group(group)
