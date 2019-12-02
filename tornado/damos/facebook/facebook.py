@@ -25,8 +25,8 @@ import tornado.web
 from tornado.options import define, options
 
 define("port", default=8888, help="run on the given port", type=int)
-define("facebook_api_key", help="your Facebook application API key", type=str)
-define("facebook_secret", help="your Facebook application secret", type=str)
+define("facebook_api_key", default="cza", help="your Facebook application API key", type=str)
+define("facebook_secret", default="cza", help="your Facebook application secret", type=str)
 
 
 class Application(tornado.web.Application):
@@ -110,10 +110,10 @@ class PostModule(tornado.web.UIModule):
 
 
 def main():
-    tornado.options.parse_command_line()
-    if not (options.facebook_api_key and options.facebook_secret):
-        print("--facebook_api_key and --facebook_secret must be set")
-        return
+    # tornado.options.parse_command_line()
+    # if not (options.facebook_api_key and options.facebook_secret):
+    #     print("--facebook_api_key and --facebook_secret must be set")
+    #     return
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
