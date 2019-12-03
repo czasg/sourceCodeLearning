@@ -20,7 +20,6 @@ from scrapy.utils.python import memoizemethod_noargs, to_native_str
 
 
 class TextResponse(Response):
-
     _DEFAULT_ENCODING = 'ascii'
 
     def __init__(self, *args, **kwargs):
@@ -44,7 +43,7 @@ class TextResponse(Response):
         if isinstance(body, six.text_type):
             if self._encoding is None:
                 raise TypeError('Cannot convert unicode body - %s has no encoding' %
-                    type(self).__name__)
+                                type(self).__name__)
             self._body = body.encode(self._encoding)
         else:
             super(TextResponse, self)._set_body(body)
@@ -59,7 +58,7 @@ class TextResponse(Response):
 
     def _declared_encoding(self):
         return self._encoding or self._headers_encoding() \
-            or self._body_declared_encoding()
+               or self._body_declared_encoding()
 
     def body_as_unicode(self):
         """Return body as unicode"""
@@ -90,8 +89,8 @@ class TextResponse(Response):
         if self._cached_benc is None:
             content_type = to_native_str(self.headers.get(b'Content-Type', b''))
             benc, ubody = html_to_unicode(content_type, self.body,
-                    auto_detect_fun=self._auto_detect_fun,
-                    default_encoding=self._DEFAULT_ENCODING)
+                                          auto_detect_fun=self._auto_detect_fun,
+                                          default_encoding=self._DEFAULT_ENCODING)
             self._cached_benc = benc
             self._cached_ubody = ubody
         return self._cached_benc
@@ -102,7 +101,7 @@ class TextResponse(Response):
                 text.decode(enc)
             except UnicodeError:
                 continue
-            return resolve_encoding(enc)
+            return resolve_encoding(enc)  # todo, whats? how do you kill my encoding?
 
     @memoizemethod_noargs
     def _body_declared_encoding(self):
@@ -146,16 +145,16 @@ class TextResponse(Response):
             raise ValueError("SelectorList is not supported")
         encoding = self.encoding if encoding is None else encoding
         return super(TextResponse, self).follow(url, callback,
-            method=method,
-            headers=headers,
-            body=body,
-            cookies=cookies,
-            meta=meta,
-            encoding=encoding,
-            priority=priority,
-            dont_filter=dont_filter,
-            errback=errback
-        )
+                                                method=method,
+                                                headers=headers,
+                                                body=body,
+                                                cookies=cookies,
+                                                meta=meta,
+                                                encoding=encoding,
+                                                priority=priority,
+                                                dont_filter=dont_filter,
+                                                errback=errback
+                                                )
 
 
 def _url_from_selector(sel):
