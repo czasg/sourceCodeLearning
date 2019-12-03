@@ -65,6 +65,7 @@ class DownloadHandlers(object):
     def download_request(self, request, spider):
         scheme = urlparse_cached(request).scheme
         handler = self._get_handler(scheme)
+        # print(handler,'###############')  # <scrapy.core.downloader.handlers.http11.HTTP11DownloadHandler object at 0x04697CD0>
         if not handler:
             raise NotSupported("Unsupported URL scheme '%s': %s" %
                                (scheme, self._notconfigured[scheme]))

@@ -23,6 +23,7 @@ class TextResponse(Response):
     _DEFAULT_ENCODING = 'ascii'
 
     def __init__(self, *args, **kwargs):
+        # print(args, kwargs)  # url=url, status=status, headers=headers, body=body, flags=flags 五个参数
         self._encoding = kwargs.pop('encoding', None)
         self._cached_benc = None
         self._cached_ubody = None
@@ -44,6 +45,7 @@ class TextResponse(Response):
             if self._encoding is None:
                 raise TypeError('Cannot convert unicode body - %s has no encoding' %
                                 type(self).__name__)
+            # print(self._encoding)
             self._body = body.encode(self._encoding)
         else:
             super(TextResponse, self)._set_body(body)
@@ -70,6 +72,7 @@ class TextResponse(Response):
         # access self.encoding before _cached_ubody to make sure
         # _body_inferred_encoding is called
         benc = self.encoding
+        # print('##', benc, '#')
         if self._cached_ubody is None:
             charset = 'charset=%s' % benc
             self._cached_ubody = html_to_unicode(charset, self.body)[1]
@@ -101,7 +104,9 @@ class TextResponse(Response):
                 text.decode(enc)
             except UnicodeError:
                 continue
+            # print('!!!!!!!!', enc)
             return resolve_encoding(enc)  # todo, whats? how do you kill my encoding?
+            # return resolve_encoding('gb2312')
 
     @memoizemethod_noargs
     def _body_declared_encoding(self):

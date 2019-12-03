@@ -203,15 +203,6 @@ class FeedExporter(object):
 
     @classmethod
     def from_crawler(cls, crawler):
-        try:
-            o = cls(crawler.settings)
-            o.crawler = crawler
-            crawler.signals.connect(o.open_spider, signals.spider_opened)
-            crawler.signals.connect(o.close_spider, signals.spider_closed)
-            crawler.signals.connect(o.item_scraped, signals.item_scraped)
-        except:
-            import traceback
-            print(traceback.format_exc())
         o = cls(crawler.settings)
         o.crawler = crawler
         crawler.signals.connect(o.open_spider, signals.spider_opened)

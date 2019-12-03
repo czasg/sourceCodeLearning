@@ -356,6 +356,7 @@ class ScrapyAgent(object):
         return result
 
     def _cb_bodyready(self, txresponse, request):
+        # print(txresponse)  # <twisted.web._newclient.Response object at 0x04709270>
         # deliverBody hangs for responses without body
         if txresponse.length == 0:
             return txresponse, b'', None
@@ -397,6 +398,7 @@ class ScrapyAgent(object):
         status = int(txresponse.code)
         headers = Headers(txresponse.headers.getAllRawHeaders())
         respcls = responsetypes.from_args(headers=headers, url=url, body=body)
+        # print(respcls)  # <class 'scrapy.http.response.html.HtmlResponse'>
         return respcls(url=url, status=status, headers=headers, body=body, flags=flags)
 
 
