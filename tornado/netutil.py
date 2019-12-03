@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2011 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -95,6 +95,10 @@ def bind_sockets(
     ``reuse_port`` option sets ``SO_REUSEPORT`` option for every socket
     in the list. If your platform doesn't support this option ValueError will
     be raised.
+
+    family: 表示socket使用的协议簇 AF_UNIX(本机通信）/AF_INET（TCP/IP协议簇中的IPv4协议）/AF_INET6（TCP/IP协议簇中的IPv4协议）
+    sockettype：表示socket的类型
+    proto：顾名思义，就是指定协议  IPPROTO_TCP(=6)和IPPTOTO_UDP(=17)，它们分别对应TCP传输协议、UDP传输协议。
     """
     if reuse_port and not hasattr(socket, "SO_REUSEPORT"):
         raise ValueError("the platform doesn't support SO_REUSEPORT")
@@ -116,7 +120,7 @@ def bind_sockets(
     for res in sorted(
         socket.getaddrinfo(address, port, family, socket.SOCK_STREAM, 0, flags),
         key=lambda x: x[0],
-    ):  # ������ʲô����д��
+    ):  # 这又是什么神仙写法
         if res in unique_addresses:
             continue
 
@@ -170,11 +174,17 @@ def bind_sockets(
         if requested_port == 0 and bound_port is not None:
             sockaddr = tuple([host, bound_port] + list(sockaddr[2:]))
 
-        sock.setblocking(False)
-        sock.bind(sockaddr)
+        sock.setblocking(False)  # 创建socket.socket后设置为非阻塞连接
+        sock.bind(sockaddr)  # 绑定address
         bound_port = sock.getsockname()[1]
         sock.listen(backlog)
         sockets.append(sock)
+        # print(sockets)
+        """
+        总体来说就是创建socket然后绑定bind某个address，并启动监听list。那么这样看来服务就是启动了咯???
+        不是把==服务居然已经起来了，后面还有啥事??? 启动之后直接挂掉了==好像是这么个理
+        因为非阻塞，好像确实会直接走掉，非阻塞还可以使用accept来获取目标
+        """
     return sockets
 
 
