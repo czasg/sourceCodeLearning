@@ -52,7 +52,7 @@ class TextResponse(Response):
 
     def replace(self, *args, **kwargs):
         kwargs.setdefault('encoding', self.encoding)
-        return Response.replace(self, *args, **kwargs)
+        return Response.replace(self, *args, **kwargs)  # 原来如此，这里的self可太骚了. 将自己作为instance传递过去而来
 
     @property
     def encoding(self):
