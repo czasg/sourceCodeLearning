@@ -29,7 +29,7 @@ from scrapy.utils.boto import is_botocore
 logger = logging.getLogger(__name__)
 
 
-class IFeedStorage(Interface):
+class IFeedStorage(Interface):  # todo scrapy怎么还要一个这么神奇的模块==
     """Interface that all Feed Storages must implement"""
 
     def __init__(uri):
