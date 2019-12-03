@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import aiopg
+import aiomysql
 import bcrypt
 import markdown
 import os.path
@@ -36,7 +36,11 @@ define("port", default=8888, help="run on the given port", type=int)
 # define("db_database", default="blog", help="blog database name")
 # define("db_user", default="blog", help="blog database user")
 # define("db_password", default="blog", help="blog database password")
-
+define("db_host", default="localhost", help="blog database host")
+define("db_port", default=3306, help="blog database port")
+define("db_database", default="cza", help="blog database name")
+define("db_user", default="root", help="blog database user")
+define("db_password", default="cza19950917", help="blog database password")
 
 class NoResultError(Exception):
     pass
@@ -44,7 +48,8 @@ class NoResultError(Exception):
 
 async def maybe_create_tables(db):
     try:
-        with (await db.cursor()) as cur:
+        async with db.acquire() as conn:
+            cur = await conn.cursor()
             await cur.execute("SELECT COUNT(*) FROM entries LIMIT 1")
             await cur.fetchone()
     except psycopg2.ProgrammingError:
@@ -55,8 +60,8 @@ async def maybe_create_tables(db):
 
 
 class Application(tornado.web.Application):
-    def __init__(self):
-        self.db = None
+    def __init__(self, db):
+        self.db = db
         handlers = [
             (r"/", HomeHandler),
             (r"/archive", ArchiveHandler),
@@ -93,7 +98,8 @@ class BaseHandler(tornado.web.RequestHandler):
 
         Must be called with ``await self.execute(...)``
         """
-        with (await self.application.db.cursor()) as cur:
+        async with (await self.application.db.acquire()) as conn:
+            cur = await conn.cursor()
             await cur.execute(stmt, args)
 
     async def query(self, stmt, *args):
@@ -107,7 +113,10 @@ class BaseHandler(tornado.web.RequestHandler):
 
             for row in await self.query(...)
         """
-        with (await self.application.db.cursor()) as cur:
+        async with (await self.application.db.acquire()) as conn:
+            cur = await conn.cursor()
+            print(stmt)
+            print(args)
             await cur.execute(stmt, args)
             return [self.row_to_obj(row, cur) for row in await cur.fetchall()]
 
@@ -239,9 +248,10 @@ class AuthCreateHandler(BaseHandler):
             tornado.escape.utf8(self.get_argument("password")),
             bcrypt.gensalt(),
         )
+        # print(self.get_argument("email"), self.get_argument("name"))
+        # print(tornado.escape.to_unicode(hashed_password))
         author = await self.queryone(
-            "INSERT INTO authors (email, name, hashed_password) "
-            "VALUES (%s, %s, %s) RETURNING id",
+            "INSERT INTO `authors` (`email`, `name`, `hashed_password`) VALUES (%s, %s, %s)",
             self.get_argument("email"),
             self.get_argument("name"),
             tornado.escape.to_unicode(hashed_password),
@@ -295,23 +305,24 @@ async def main():
     tornado.options.parse_command_line()
 
     # Create the global connection pool.
-    # async with aiopg.create_pool(
-    #     host=options.db_host,
-    #     port=options.db_port,
-    #     user=options.db_user,
-    #     password=options.db_password,
-    #     dbname=options.db_database,
-    # ) as db:
-    #     await maybe_create_tables(db)
-    #     app = Application(db)
-    #     app.listen(options.port)
-    #
-    #     # In this demo the server will simply run until interrupted
-    #     # with Ctrl-C, but if you want to shut down more gracefully,
-    #     # call shutdown_event.set().
-    #     shutdown_event = tornado.locks.Event()
-    #     await shutdown_event.wait()
-    app = Application()
+    db = await aiomysql.create_pool(
+        host=options.db_host,
+        port=options.db_port,
+        user=options.db_user,
+        password=options.db_password,
+        db=options.db_database,
+        charset='utf8',
+    )
+    await maybe_create_tables(db)
+    app = Application(db)
+    app.listen(options.port)
+
+    # In this demo the server will simply run until interrupted
+    # with Ctrl-C, but if you want to shut down more gracefully,
+    # call shutdown_event.set().
+    shutdown_event = tornado.locks.Event()
+    await shutdown_event.wait()
+    app = Application(db)
     app.listen(options.port)
 
     # In this demo the server will simply run until interrupted
