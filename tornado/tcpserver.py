@@ -148,7 +148,7 @@ class TCPServer(object):
         `TCPServer.start` afterwards.  It is, however, necessary to start
         the `.IOLoop`.
         """
-        sockets = bind_sockets(port, address=address)
+        sockets = bind_sockets(port, address=address)  # 这一步一定启动了一个socket进行bind和list
         self.add_sockets(sockets)
 
     def add_sockets(self, sockets: Iterable[socket.socket]) -> None:
