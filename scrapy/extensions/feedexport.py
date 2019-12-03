@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Feed Exports extension
 
@@ -29,7 +30,7 @@ from scrapy.utils.boto import is_botocore
 logger = logging.getLogger(__name__)
 
 
-class IFeedStorage(Interface):  # todo scrapy怎么还要一个这么神奇的模块==
+class IFeedStorage(Interface):  # todo scrapy鎬庝箞杩樿涓�涓繖涔堢濂囩殑妯″潡==
     """Interface that all Feed Storages must implement"""
 
     def __init__(uri):
@@ -202,6 +203,15 @@ class FeedExporter(object):
 
     @classmethod
     def from_crawler(cls, crawler):
+        try:
+            o = cls(crawler.settings)
+            o.crawler = crawler
+            crawler.signals.connect(o.open_spider, signals.spider_opened)
+            crawler.signals.connect(o.close_spider, signals.spider_closed)
+            crawler.signals.connect(o.item_scraped, signals.item_scraped)
+        except:
+            import traceback
+            print(traceback.format_exc())
         o = cls(crawler.settings)
         o.crawler = crawler
         crawler.signals.connect(o.open_spider, signals.spider_opened)
