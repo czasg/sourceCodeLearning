@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from collections import defaultdict, deque  # deque可以构造一个固定大小的队列，当超过队列之后，会把前面的数据自动移除掉
 import logging
 import pprint
