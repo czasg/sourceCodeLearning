@@ -116,7 +116,7 @@ def bind_sockets(
     for res in sorted(
         socket.getaddrinfo(address, port, family, socket.SOCK_STREAM, 0, flags),
         key=lambda x: x[0],
-    ):
+    ):  # 这又是什么神仙写法
         if res in unique_addresses:
             continue
 
