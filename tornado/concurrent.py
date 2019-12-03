@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2012 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -36,7 +36,7 @@ from tornado.log import app_log
 import typing
 from typing import Any, Callable, Optional, Tuple, Union
 
-_T = typing.TypeVar("_T")
+_T = typing.TypeVar("_T")  # 用于定义某种类型吗
 
 
 class ReturnValueIgnoredError(Exception):
@@ -46,7 +46,7 @@ class ReturnValueIgnoredError(Exception):
 
 Future = asyncio.Future
 
-FUTURES = (futures.Future, Future)
+FUTURES = (futures.Future, Future)  # 可以是asyncio的，也可以是concurrent的
 
 
 def is_future(x: Any) -> bool:
@@ -68,7 +68,7 @@ class DummyExecutor(futures.Executor):
         pass
 
 
-dummy_executor = DummyExecutor()
+dummy_executor = DummyExecutor()  # 假-执行器
 
 
 def run_on_executor(*args: Any, **kwargs: Any) -> Callable:
@@ -129,7 +129,7 @@ def run_on_executor(*args: Any, **kwargs: Any) -> Callable:
     if args and kwargs:
         raise ValueError("cannot combine positional and keyword args")
     if len(args) == 1:
-        return run_on_executor_decorator(args[0])
+        return run_on_executor_decorator(args[0])  # 这就是针对不同场景设计的装饰器，果然有一手啊
     elif len(args) != 0:
         raise ValueError("expected 1 argument, got %d", len(args))
     return run_on_executor_decorator

@@ -41,7 +41,7 @@ class BaseAsyncIOLoop(IOLoop):
     def initialize(  # type: ignore
         self, asyncio_loop: asyncio.AbstractEventLoop, **kwargs: Any
     ) -> None:
-        self.asyncio_loop = asyncio_loop
+        self.asyncio_loop = asyncio_loop  # asyncio.get_event_loop()
         # Maps fd to (fileobj, handler function) pair (as in IOLoop.add_handler)
         self.handlers = {}  # type: Dict[int, Tuple[Union[int, _Selectable], Callable]]
         # Set of fds listening for reads/writes
@@ -145,6 +145,11 @@ class BaseAsyncIOLoop(IOLoop):
         try:
             self._setup_logging()
             asyncio.set_event_loop(self.asyncio_loop)
+            """
+            所以最后还是调用的asyncio的方法吗. asyncio.get_event_loop().run_forever()
+            可是你不知道这个方法在asyncio中比较低级吗，都是用的run_until_complete把
+            算了，找到loop事件循环了，感觉还是不错的。前面的努力还是没有白费的
+            """
             self.asyncio_loop.run_forever()
         finally:
             asyncio.set_event_loop(old_loop)

@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2009 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -43,7 +43,7 @@ import math
 import random
 
 from tornado.concurrent import (
-    Future,
+    Future,  # Future = asyncio.Future  真的贱，wnm呢
     is_future,
     chain_future,
     future_set_exc_info,
@@ -116,9 +116,9 @@ class IOLoop(Configurable):
             sock.bind(("", 8888))
             sock.listen(128)
 
-            io_loop = tornado.ioloop.IOLoop.current()
-            callback = functools.partial(connection_ready, sock)
-            io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
+            io_loop = tornado.ioloop.IOLoop.current()  # 这个current => asyncio.get_event_loop()
+            callback = functools.partial(connection_ready, sock)  # => 初始化回调函数的一个值
+            io_loop.add_handler(sock.fileno(), callback, io_loop.READ)  # selectors.register(fileno, READ, callback)
             io_loop.start()
 
     .. testoutput::
@@ -268,6 +268,7 @@ class IOLoop(Configurable):
                 return None
             raise
         try:
+            # return <tornado.platform.asyncio.AsyncIOMainLoop object at 0x028BCD50>
             return IOLoop._ioloop_for_asyncio[loop]
         except KeyError:
             if instance:
