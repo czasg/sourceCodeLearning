@@ -74,7 +74,7 @@ class MessageNewHandler(tornado.web.RequestHandler):
         message["html"] = tornado.escape.to_unicode(
             self.render_string("message.html", message=message)
         )
-        print(message)
+        print('MessageNewHandler', message)
         if self.get_argument("next", None):
             self.redirect(self.get_argument("next"))
         else:
@@ -102,7 +102,8 @@ class MessageUpdatesHandler(tornado.web.RequestHandler):
             messages = global_message_buffer.get_messages_since(cursor)
         if self.request.connection.stream.closed():
             return
-        self.write(dict(messages=messages))
+        print('MessageUpdatesHandler', messages)
+        self.write(dict(messages=messages))  # 这个后端写的就很神奇了. 新用户建立连接就会完整的发送一份. 否则就发送最新的一条嘛
 
     def on_connection_close(self):
         self.wait_future.cancel()
@@ -120,7 +121,7 @@ def main():
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         static_path=os.path.join(os.path.dirname(__file__), "static"),
         xsrf_cookies=True,
-        debug=options.debug,
+        # debug=options.debug,
     )
     app.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
