@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#
+# -*- coding: utf-8 -*-
 # Copyright 2009 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -33,7 +33,7 @@ class MessageBuffer(object):
         # cond is notified whenever the message cache is updated
         self.cond = tornado.locks.Condition()
         self.cache = []
-        self.cache_size = 200
+        self.cache_size = 200  # 原来还是可以做缓存的. 控制队列大小的方式, [:] = [-max_size:]
 
     def get_messages_since(self, cursor):
         """Returns a list of messages newer than the given cursor.
@@ -49,10 +49,10 @@ class MessageBuffer(object):
         return results
 
     def add_message(self, message):
-        self.cache.append(message)
+        self.cache.append(message)  # 缓存数据消息
         if len(self.cache) > self.cache_size:
             self.cache = self.cache[-self.cache_size :]
-        self.cond.notify_all()
+        self.cond.notify_all()  # 释放锁
 
 
 # Making this a non-singleton is left as an exercise for the reader.
@@ -74,6 +74,7 @@ class MessageNewHandler(tornado.web.RequestHandler):
         message["html"] = tornado.escape.to_unicode(
             self.render_string("message.html", message=message)
         )
+        print(message)
         if self.get_argument("next", None):
             self.redirect(self.get_argument("next"))
         else:
