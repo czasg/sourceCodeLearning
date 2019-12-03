@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2009 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -209,7 +209,7 @@ class RequestHandler(object):
         super(RequestHandler, self).__init__()
 
         self.application = application
-        self.request = request
+        self.request = request  # todo, 这里是关键啊，这到底是个啥子
         self._headers_written = False
         self._finished = False
         self._auto_finish = True
