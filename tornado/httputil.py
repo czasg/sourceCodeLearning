@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2009 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -508,6 +508,7 @@ class HTTPOutputError(Exception):
 
 class HTTPServerConnectionDelegate(object):
     """Implement this interface to handle requests from `.HTTPServer`.
+    Delegate: 代表，会议代表；委员会成员
 
     .. versionadded:: 4.0
     """
