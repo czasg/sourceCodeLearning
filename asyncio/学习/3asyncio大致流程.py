@@ -26,7 +26,7 @@ class Future:
             self._loop.call_soon(fn, self, context=context)
         else:
             if context is None:
-                context = contextvars.copy_context()
+                context = contextvars.copy_context()  # todo, whats mean? a context for coroutines
             self._callbacks.append((fn, context))
 
     def set_result(self, result):
@@ -61,7 +61,7 @@ class Task(Future):
         self._coro = coro
         self._context = contextvars.copy_context()
 
-        self._loop.call_soon(self.__step, context=self._context)
+        self._loop.call_soon(self.__step, context=self._context)  # 实例化后之后，就立即将自己推到任务期程中
         _register_task(self)
 
     def __step(self, exc=None):
@@ -200,10 +200,10 @@ class BaseEventLoop(events.AbstractEventLoop):
     def create_future(self):
         return futures.Future(loop=self)
 
-    def create_task(self, coro):
+    def create_task(self, coro):  # 在BaseEventLoop中的创建任务, 可以获取一个Task的instance, 直接进去了期程
         self._check_closed()
         if self._task_factory is None:
-            task = tasks.Task(coro, loop=self)
+            task = tasks.Task(coro, loop=self)  # 这个instance不简单
             if task._source_traceback:
                 del task._source_traceback[-1]
         else:
@@ -259,7 +259,7 @@ class BaseEventLoop(events.AbstractEventLoop):
                 handle._scheduled = False
 
         timeout = None
-        if self._ready or self._stopping:
+        if self._ready or self._stopping:  # 如果有ready队列的数据, 则selectors调度时间为0, 也就是立即执行
             timeout = 0
         elif self._scheduled:
             when = self._scheduled[0]._when

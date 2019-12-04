@@ -30,13 +30,20 @@
 
 import _asyncio
 import asyncio
-
-async def test():
+from contextvars import ContextVar
+async def test1():
     await asyncio.sleep(2)
-
+    print('???')
+    import time
+    time.sleep(3)
+    print('hahaha')
+async def test2():
+    await asyncio.sleep(3)
+    print('???')
 loop = asyncio.get_event_loop()
-task = _asyncio.Task(test(), loop=loop)
-
+task1 = _asyncio.Task(test1(), loop=loop)
+task2 = _asyncio.Task(test2(), loop=loop)
+loop.run_until_complete(asyncio.wait([task1, task2]))
 
 
 
