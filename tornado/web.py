@@ -1693,7 +1693,7 @@ class RequestHandler(object):
                 except iostream.StreamClosedError:
                     return
 
-            method = getattr(self, self.request.method.lower())
+            method = getattr(self, self.request.method.lower())  # 哦豁, 被我找到了, 调出request的method, 然后执行, 可以的
             result = method(*self.path_args, **self.path_kwargs)
             if result is not None:
                 result = await result
@@ -2163,7 +2163,7 @@ class Application(ReversibleRouter):
 
     def __call__(
         self, request: httputil.HTTPServerRequest
-    ) -> Optional[Awaitable[None]]:
+    ) -> Optional[Awaitable[None]]:  # 到底是谁在调用你呢?
         # Legacy HTTPServer interface
         dispatcher = self.find_handler(request)
         return dispatcher.execute()
@@ -2260,7 +2260,7 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
         self.application = application
         self.connection = request.connection
         self.request = request
-        self.handler_class = handler_class
+        self.handler_class = handler_class  # 这个 handler_class 不简单啊, 不会就是我们注册用的把
         self.handler_kwargs = handler_kwargs or {}
         self.path_args = path_args or []
         self.path_kwargs = path_kwargs or {}
