@@ -774,7 +774,7 @@ class HTTP1ServerConnection(object):
         :arg context: an opaque application-defined object that is accessible
             as ``connection.context``
         """
-        self.stream = stream
+        self.stream = stream  # 这里的stream就是sock里面的request, 而且是被包装过的
         if params is None:
             params = HTTP1ConnectionParameters()
         self.params = params

@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2011 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -161,10 +161,14 @@ class TCPServer(object):
         control over the initialization of a multi-process server.
         """
         for sock in sockets:
+            """
+            self._sockets: 里面装的是套接字的fileno及其套接字对象
+            self._handlers: 套接字的fileno及其handler处理函数
+            """
             self._sockets[sock.fileno()] = sock
             self._handlers[sock.fileno()] = add_accept_handler(
                 sock, self._handle_connection
-            )
+            )  # 该函数返回的是remove_handler, 所以我拿到的是一个终结处理逻辑嘛
 
     def add_socket(self, socket: socket.socket) -> None:
         """Singular version of `add_sockets`.  Takes a single socket object."""
@@ -278,6 +282,7 @@ class TCPServer(object):
         raise NotImplementedError()
 
     def _handle_connection(self, connection: socket.socket, address: Any) -> None:
+        # # 此处获取到的是sock.accept() 返回的两个数据, 也就是request和address嘛
         if self.ssl_options is not None:
             assert ssl, "Python 2.6+ and OpenSSL required for SSL"
             try:
@@ -321,7 +326,7 @@ class TCPServer(object):
                     read_chunk_size=self.read_chunk_size,
                 )
 
-            future = self.handle_stream(stream, address)
+            future = self.handle_stream(stream, address)  # 会注册一个未来对象到loop里面
             if future is not None:
                 IOLoop.current().add_future(
                     gen.convert_yielded(future), lambda f: f.result()

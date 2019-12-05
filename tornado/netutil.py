@@ -286,6 +286,17 @@ def add_accept_handler(
         io_loop.remove_handler(sock)
         removed[0] = True
 
+    """
+    BaseAsyncIOLoop里面的方法
+    实际调用的是asyncio里面, selector_events -> BaseSelectorEventLoop -> add_reader 方法
+    将accept_handler与后面的参数, 打包为一个events.Handle(callback, args, self, None) 对象
+    然后以fd注册, 也就是selectors.register方法
+    self._selector.register(fd, selectors.EVENT_READ,
+                                    (handle, None))
+    
+    所以此处就算服务正式挂起了. 每当有一个conn连接建立, 都会调用accept_handler, 用于sock.accept接受新连接
+    然后调用回调函数执行新连接
+    """
     io_loop.add_handler(sock, accept_handler, IOLoop.READ)
     return remove_handler
 

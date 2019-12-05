@@ -225,7 +225,7 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
             stream, address, self.protocol, self.trusted_downstream
         )
         conn = HTTP1ServerConnection(stream, self.conn_params, context)
-        self._connections.add(conn)
+        self._connections.add(conn)  # 每当有一个连接建立, 就把他存到这个_connections里面, 可以, 有点感觉了
         conn.start_serving(self)
 
     def start_request(
