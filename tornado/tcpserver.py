@@ -282,7 +282,8 @@ class TCPServer(object):
         raise NotImplementedError()
 
     def _handle_connection(self, connection: socket.socket, address: Any) -> None:
-        # # 此处获取到的是sock.accept() 返回的两个数据, 也就是request和address嘛
+        # 此处获取到的是sock.accept() 返回的两个数据, 也就是request和address嘛
+        # 每当有用户建立连接, 都会进入此处
         if self.ssl_options is not None:
             assert ssl, "Python 2.6+ and OpenSSL required for SSL"
             try:
