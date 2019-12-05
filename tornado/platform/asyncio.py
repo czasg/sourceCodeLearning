@@ -136,7 +136,7 @@ class BaseAsyncIOLoop(IOLoop):
 
     def _handle_events(self, fd: int, events: int) -> None:
         fileobj, handler_func = self.handlers[fd]
-        handler_func(fileobj, events)
+        handler_func(fileobj, events)  # handler_func -> accept_handler
 
     def start(self) -> None:
         try:

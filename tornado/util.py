@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Miscellaneous utility functions and classes.
 
 This module is used internally by Tornado.  It is not necessarily expected
@@ -283,7 +284,10 @@ class Configurable(object):
         # initialize vs __init__ chosen for compatibility with AsyncHTTPClient
         # singleton magic.  If we get rid of that we can switch to __init__
         # here too.
+        # print(args, init_kwargs)  # 服务端初始化时的参数 () {'make_current': True}
+        # print(instance)  # <tornado.platform.asyncio.AsyncIOMainLoop object at 0x02C13F10>
         instance.initialize(*args, **init_kwargs)
+        # exit(0)
         return instance
 
     @classmethod

@@ -2108,6 +2108,10 @@ class Application(ReversibleRouter):
         .. versionchanged:: 4.3
            Now returns the `.HTTPServer` object.
         """
+        """
+        HTTPServer() 初始化的时候, 调用了Configurable里面的__new__构造函数
+        主要是执行了AsyncIOMainLoop的initialize函数
+        """
         server = HTTPServer(self, **kwargs)
         server.listen(port, address)
         return server
@@ -2309,7 +2313,7 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
         if not self.application.settings.get("static_hash_cache", True):
             StaticFileHandler.reset()
 
-        self.handler = self.handler_class(
+        self.handler = self.handler_class(  # 在这里实例化的目标对象
             self.application, self.request, **self.handler_kwargs
         )
         transforms = [t(self.request) for t in self.application.transforms]

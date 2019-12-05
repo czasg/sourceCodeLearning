@@ -368,11 +368,11 @@ class HTTPServerRequest(object):
 
     def __init__(
         self,
-        method: str = None,
-        uri: str = None,
+        method: str = None,  # method GET
+        uri: str = None,  # 目标path / /index 等
         version: str = "HTTP/1.0",
         headers: HTTPHeaders = None,
-        body: bytes = None,
+        body: bytes = None,  # 会解析出整个http请求的
         host: str = None,
         files: Dict[str, List["HTTPFile"]] = None,
         connection: "HTTPConnection" = None,

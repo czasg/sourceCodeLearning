@@ -239,7 +239,7 @@ class _RoutingDelegate(httputil.HTTPMessageDelegate):
         self,
         start_line: Union[httputil.RequestStartLine, httputil.ResponseStartLine],
         headers: httputil.HTTPHeaders,
-    ) -> Optional[Awaitable[None]]:
+    ) -> Optional[Awaitable[None]]:  # 已经开始解析header了
         assert isinstance(start_line, httputil.RequestStartLine)
         request = httputil.HTTPServerRequest(
             connection=self.request_conn,
@@ -247,8 +247,8 @@ class _RoutingDelegate(httputil.HTTPMessageDelegate):
             start_line=start_line,
             headers=headers,
         )
-
-        self.delegate = self.router.find_handler(request)
+        # self.router 貌似就是Application, 调用find_handler就是调用App里面的
+        self.delegate = self.router.find_handler(request)  # 原来这里的request也是被打包过的, 里面装有所有的http信息
         if self.delegate is None:
             app_log.debug(
                 "Delegate for %s %s request not found",
@@ -366,7 +366,7 @@ class RuleRouter(Router):
 
                 delegate = self.get_target_delegate(
                     rule.target, request, **target_params
-                )
+                )  # _HandlerDelegate
 
                 if delegate is not None:
                     return delegate
@@ -467,7 +467,7 @@ class Rule(object):
         if isinstance(target, str):
             # import the Module and instantiate the class
             # Must be a fully qualified name (module.ClassName)
-            target = import_object(target)
+            target = import_object(target)  # 这个target, 装的不会就是我们自己写的接口把
 
         self.matcher = matcher  # type: Matcher
         self.target = target

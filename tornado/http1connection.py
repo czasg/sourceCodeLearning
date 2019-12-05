@@ -766,7 +766,7 @@ class HTTP1ServerConnection(object):
         self,
         stream: iostream.IOStream,
         params: HTTP1ConnectionParameters = None,
-        context: object = None,
+        context: object = None,  # 127.0.0.1
     ) -> None:
         """
         :arg stream: an `.IOStream`
@@ -811,8 +811,8 @@ class HTTP1ServerConnection(object):
     ) -> None:
         try:
             while True:
-                conn = HTTP1Connection(self.stream, False, self.params, self.context)
-                request_delegate = delegate.start_request(self, conn)
+                conn = HTTP1Connection(self.stream, False, self.params, self.context)  # 封装连接对象
+                request_delegate = delegate.start_request(self, conn)  # delegate就是HTTPServer -> 调用服务端的start_request -> routing._RoutingDelegate
                 try:
                     ret = await conn.read_response(request_delegate)
                 except (

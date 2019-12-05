@@ -172,7 +172,7 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
         # because we want its arguments to appear on the class
         # constructor. When changing this signature, also update the
         # copy in httpserver.rst.
-        self.request_callback = request_callback  # µ±ÓĞÁ¬½Ó½¨Á¢ºó, »áÍ¨¹ı´Ë»Øµ÷º¯Êı½øĞĞ·â×° _CallableAdapter(self.request_callback, request_conn)
+        self.request_callback = request_callback  # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Í¨ï¿½ï¿½ï¿½Ë»Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ·ï¿½×° _CallableAdapter(self.request_callback, request_conn)
         self.xheaders = xheaders
         self.protocol = protocol
         self.conn_params = HTTP1ConnectionParameters(
@@ -225,14 +225,14 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
             stream, address, self.protocol, self.trusted_downstream
         )
         conn = HTTP1ServerConnection(stream, self.conn_params, context)
-        self._connections.add(conn)  # Ã¿µ±ÓĞÒ»¸öÁ¬½Ó½¨Á¢, ¾Í°ÑËû´æµ½Õâ¸ö_connectionsÀïÃæ, ¿ÉÒÔ, ÓĞµã¸Ğ¾õÁË
+        self._connections.add(conn)  # Ã¿ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½, ï¿½Í°ï¿½ï¿½ï¿½ï¿½æµ½ï¿½ï¿½ï¿½_connectionsï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½, ï¿½Ğµï¿½Ğ¾ï¿½ï¿½ï¿½
         conn.start_serving(self)
 
     def start_request(
         self, server_conn: object, request_conn: httputil.HTTPConnection
     ) -> httputil.HTTPMessageDelegate:
         if isinstance(self.request_callback, httputil.HTTPServerConnectionDelegate):
-            delegate = self.request_callback.start_request(server_conn, request_conn)
+            delegate = self.request_callback.start_request(server_conn, request_conn)  # class Router(httputil.HTTPServerConnectionDelegate): -> è·‘åˆ°è¿™æ¥äº†start_request
         else:
             delegate = _CallableAdapter(self.request_callback, request_conn)
 
