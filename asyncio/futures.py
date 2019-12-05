@@ -79,7 +79,7 @@ class Future:
             self._loop = events.get_event_loop()
         else:
             self._loop = loop
-        self._callbacks = []  # 用来存放回调函数的地方嘛
+        self._callbacks = []
         if self._loop.get_debug():
             self._source_traceback = format_helpers.extract_stack(
                 sys._getframe(1))
@@ -193,23 +193,23 @@ class Future:
         self.__log_traceback = False
         return self._exception
 
-    def add_done_callback(self, fn, *, context=None):  # 添加回调函数
+    def add_done_callback(self, fn, *, context=None):
         """Add a callback to be run when the future becomes done.
 
         The callback is called with a single argument - the future object. If
         the future is already done when this is called, the callback is
         scheduled with call_soon.
         """
-        if self._state != _PENDING:  # 只要函数不是在等待状态，则立即执行
+        if self._state != _PENDING:
             self._loop.call_soon(fn, self, context=context)
         else:
             if context is None:
                 context = contextvars.copy_context()
-            self._callbacks.append((fn, context))  # 原来如此。回调里面装的是一个tuple。回调函数 + 上下文
+            self._callbacks.append((fn, context))
 
     # New method not in PEP 3148.
 
-    def remove_done_callback(self, fn):  # 可以，讲道理这样速度是会快一些呀
+    def remove_done_callback(self, fn):
         """Remove all instances of a callback from the "call when done" list.
 
         Returns the number of callbacks removed.
@@ -219,7 +219,7 @@ class Future:
                               if f != fn]
         removed_count = len(self._callbacks) - len(filtered_callbacks)
         if removed_count:
-            self._callbacks[:] = filtered_callbacks  # 卧槽。牛皮。直接就是不操作列表了，遍历出所需要的列表然后重新赋值。这样是不是会快一些啊
+            self._callbacks[:] = filtered_callbacks
         return removed_count
 
     # So-called internal methods (note: no set_running_or_notify_cancel()).
@@ -232,9 +232,9 @@ class Future:
         """
         if self._state != _PENDING:
             raise InvalidStateError('{}: {!r}'.format(self._state, self))
-        self._result = result  # 直接赋值结果
+        self._result = result
         self._state = _FINISHED
-        self.__schedule_callbacks()  # 并执行一次回调函数的调度
+        self.__schedule_callbacks()
 
     def set_exception(self, exception):
         """Mark the future done and set an exception.
@@ -254,7 +254,7 @@ class Future:
         self.__schedule_callbacks()
         self.__log_traceback = True
 
-    def __await__(self):  # 这里就是如此。先yield本尊，然后再return目标结果
+    def __await__(self):
         if not self.done():
             self._asyncio_future_blocking = True
             yield self  # This tells Task to wait for completion.
@@ -269,7 +269,7 @@ class Future:
 _PyFuture = Future
 
 
-def _get_loop(fut):  # 未来对象的回调函数。
+def _get_loop(fut):
     # Tries to call Future.get_loop() if it's available.
     # Otherwise fallbacks to using the old '_loop' property.
     try:

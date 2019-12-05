@@ -29,7 +29,7 @@ def run(main, *, debug=False):
 
         asyncio.run(main())
     """
-    if events._get_running_loop() is not None:  # 如果有正在执行的，抛出异常
+    if events._get_running_loop() is not None:
         raise RuntimeError(
             "asyncio.run() cannot be called from a running event loop")
 
@@ -38,12 +38,12 @@ def run(main, *, debug=False):
 
     loop = events.new_event_loop()
     try:
-        events.set_event_loop(loop)  # 这两步 == events.get_event_loop
+        events.set_event_loop(loop)
         loop.set_debug(debug)
         return loop.run_until_complete(main)
     finally:
         try:
-            _cancel_all_tasks(loop)  # 执行run比直接使用 loop.run_until_complete(main) 要好一些，处理异常都干净些
+            _cancel_all_tasks(loop)
             loop.run_until_complete(loop.shutdown_asyncgens())
         finally:
             events.set_event_loop(None)

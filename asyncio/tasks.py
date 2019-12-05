@@ -113,7 +113,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
         self._coro = coro
         self._context = contextvars.copy_context()
 
-        self._loop.call_soon(self.__step, context=self._context)  # 原来在这里。呵呵。执行的__step
+        self._loop.call_soon(self.__step, context=self._context)
         _register_task(self)
 
     def __del__(self):
@@ -220,7 +220,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
             if exc is None:
                 # We use the `send` method directly, because coroutines
                 # don't have `__iter__` and `__next__` methods.
-                result = coro.send(None)  # 终于来了是吧老贼。执行协程
+                result = coro.send(None)
             else:
                 result = coro.throw(exc)
         except StopIteration as exc:
@@ -287,7 +287,7 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
             _leave_task(self._loop, self)
             self = None  # Needed to break cycles when an exception occurs.
 
-    def __wakeup(self, future):  # 那么你就对应着wakeup是吧
+    def __wakeup(self, future):
         try:
             future.result()
         except Exception as exc:
@@ -307,13 +307,13 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
 _PyTask = Task
 
 
-# try:
-#     import _asyncio
-# except ImportError:
-#     pass
-# else:
-#     # _CTask is needed for tests.
-#     Task = _CTask = _asyncio.Task  # 居然用的是这里的task！
+try:
+    import _asyncio
+except ImportError:
+    pass
+else:
+    # _CTask is needed for tests.
+    Task = _CTask = _asyncio.Task
 
 
 def create_task(coro):
@@ -552,7 +552,7 @@ def __sleep0():
     yield
 
 
-async def sleep(delay, result=None, *, loop=None):  # 居然被我找到了sleep  有两个方法很有意思。一个call_soon，一个call_later
+async def sleep(delay, result=None, *, loop=None):
     """Coroutine that completes after a given time (in seconds)."""
     if delay <= 0:
         await __sleep0()
@@ -560,16 +560,13 @@ async def sleep(delay, result=None, *, loop=None):  # 居然被我找到了sleep
 
     if loop is None:
         loop = events.get_event_loop()
-    future = loop.create_future()  # 创建一个未来对象future
+    future = loop.create_future()
     h = loop.call_later(delay,
                         futures._set_result_unless_cancelled,
                         future, result)
     try:
-        # print('sleep前')
         return await future
-
     finally:
-        # print('sleep后')
         h.cancel()
 
 
@@ -581,7 +578,7 @@ def ensure_future(coro_or_future, *, loop=None):
     if coroutines.iscoroutine(coro_or_future):
         if loop is None:
             loop = events.get_event_loop()
-        task = loop.create_task(coro_or_future)  # 目标函数是协程，则调用create_task，根据目标来申请任务Task
+        task = loop.create_task(coro_or_future)
         if task._source_traceback:
             del task._source_traceback[-1]
         return task

@@ -39,7 +39,7 @@ def _test_selector_event(selector, fd, event):
         return bool(key.events & event)
 
 
-class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体的事件循环loop
+class BaseSelectorEventLoop(base_events.BaseEventLoop):
     """Selector event loop.
 
     See events.EventLoop for API specification.
@@ -51,8 +51,8 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
         if selector is None:
             selector = selectors.DefaultSelector()
         logger.debug('Using selector: %s', selector.__class__.__name__)
-        self._selector = selector  # 找到了。在这里进行赋值的selector
-        self._make_self_pipe()  # 在此处执行了一次_make_self_pipe
+        self._selector = selector
+        self._make_self_pipe()
         self._transports = weakref.WeakValueDictionary()
 
     def _make_socket_transport(self, sock, protocol, waiter=None, *,
@@ -246,7 +246,7 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
 
     def _add_reader(self, fd, callback, *args):
         self._check_closed()
-        handle = events.Handle(callback, args, self, None)  # 在此处构造一个handle对象
+        handle = events.Handle(callback, args, self, None)
         try:
             key = self._selector.get_key(fd)
         except KeyError:
@@ -285,9 +285,9 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
         handle = events.Handle(callback, args, self, None)
         try:
             key = self._selector.get_key(fd)
-        except KeyError:  # 原来如此。居然还利用报错来实现功能，操！
+        except KeyError:
             self._selector.register(fd, selectors.EVENT_WRITE,
-                                    (None, handle))  # 当事件可写的时候。触发回调，返回这里的handle
+                                    (None, handle))
         else:
             mask, (reader, writer) = key.events, key.data
             self._selector.modify(fd, mask | selectors.EVENT_WRITE,
@@ -544,9 +544,9 @@ class BaseSelectorEventLoop(base_events.BaseEventLoop):  # 此处实例化具体
                 transp.resume_reading()
             self._transports[transp._sock_fd] = transp
 
-    def _process_events(self, event_list):  # 关键函数点。处理events事件
+    def _process_events(self, event_list):
         for key, mask in event_list:
-            fileobj, (reader, writer) = key.fileobj, key.data  # data里面怎么传入的是这两个呀
+            fileobj, (reader, writer) = key.fileobj, key.data
             if mask & selectors.EVENT_READ and reader is not None:
                 if reader._cancelled:
                     self._remove_reader(fileobj)

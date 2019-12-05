@@ -155,7 +155,7 @@ def _ipaddr_info(host, port, family, type, proto):
     return None
 
 
-def _run_until_complete_cb(fut):  # 未来对象的回调函数
+def _run_until_complete_cb(fut):
     if not fut.cancelled():
         exc = fut.exception()
         if isinstance(exc, BaseException) and not isinstance(exc, Exception):
@@ -370,7 +370,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         self._thread_id = None
         self._clock_resolution = time.get_clock_info('monotonic').resolution
         self._exception_handler = None
-        self.set_debug(coroutines._is_debug_mode())  # 这个set_debug还做了点事哟
+        self.set_debug(coroutines._is_debug_mode())
         # In debug mode, if the execution of a callback or a step of a task
         # exceed this duration in seconds, the slow callback/task is logged.
         self.slow_callback_duration = 0.1
@@ -402,7 +402,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         """
         self._check_closed()
         if self._task_factory is None:
-            task = tasks.Task(coro, loop=self)  # 用目标协程，申请一个任务
+            task = tasks.Task(coro, loop=self)
             if task._source_traceback:
                 del task._source_traceback[-1]
         else:
@@ -471,7 +471,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         """
         raise NotImplementedError
 
-    def _process_events(self, event_list):  # 处理时间的具体方法。待实现
+    def _process_events(self, event_list):
         """Process selector events."""
         raise NotImplementedError
 
@@ -528,7 +528,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             raise RuntimeError(
                 'Cannot run the event loop while another loop is running')
         self._set_coroutine_origin_tracking(self._debug)
-        self._thread_id = threading.get_ident()  # 此时running=True
+        self._thread_id = threading.get_ident()
 
         old_agen_hooks = sys.get_asyncgen_hooks()
         sys.set_asyncgen_hooks(firstiter=self._asyncgen_firstiter_hook,
@@ -566,7 +566,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             # is no need to log the "destroy pending task" message
             future._log_destroy_pending = False
 
-        future.add_done_callback(_run_until_complete_cb)  # future <=> Task ?
+        future.add_done_callback(_run_until_complete_cb)
         try:
             self.run_forever()
         except:
@@ -675,7 +675,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         timer._scheduled = True
         return timer
 
-    def call_soon(self, callback, *args, context=None):  # 我日你大爷的。哪里调用的啊
+    def call_soon(self, callback, *args, context=None):
         """Arrange for a callback to be called as soon as possible.
 
         This operates as a FIFO queue: callbacks are called in the
@@ -708,7 +708,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         handle = events.Handle(callback, args, self, context)
         if handle._source_traceback:
             del handle._source_traceback[-1]
-        self._ready.append(handle)  # _ready里面第一次装有数据。是handle -> Task.__step
+        self._ready.append(handle)
         return handle
 
     def _check_thread(self):
@@ -1665,7 +1665,6 @@ class BaseEventLoop(events.AbstractEventLoop):
             return
         assert not isinstance(handle, events.TimerHandle)
         self._ready.append(handle)
-        # print(handle)
 
     def _add_callback_signalsafe(self, handle):
         """Like _add_callback() but called from a signal handler."""
@@ -1684,9 +1683,8 @@ class BaseEventLoop(events.AbstractEventLoop):
         schedules the resulting callbacks, and finally schedules
         'call_later' callbacks.
         """
+
         sched_count = len(self._scheduled)
-        # print(self._scheduled)  # TimerHandle???
-        # print(sched_count)
         if (sched_count > _MIN_SCHEDULED_TIMER_HANDLES and
             self._timer_cancelled_count / sched_count >
                 _MIN_CANCELLED_TIMER_HANDLES_FRACTION):
@@ -1705,7 +1703,6 @@ class BaseEventLoop(events.AbstractEventLoop):
         else:
             # Remove delayed calls that were cancelled from head of queue.
             while self._scheduled and self._scheduled[0]._cancelled:
-                # 暂时没走这里
                 self._timer_cancelled_count -= 1
                 handle = heapq.heappop(self._scheduled)
                 handle._scheduled = False
@@ -1718,7 +1715,7 @@ class BaseEventLoop(events.AbstractEventLoop):
             when = self._scheduled[0]._when
             timeout = min(max(0, when - self.time()), MAXIMUM_SELECT_TIMEOUT)
 
-        if self._debug and timeout != 0:  # 调试模式。打印一些时间是把。想法很骚，很强
+        if self._debug and timeout != 0:
             t0 = self.time()
             event_list = self._selector.select(timeout)
             dt = self.time() - t0
@@ -1739,14 +1736,14 @@ class BaseEventLoop(events.AbstractEventLoop):
                            'poll %.3f ms took %.3f ms: timeout',
                            timeout * 1e3, dt * 1e3)
         else:
-            event_list = self._selector.select(timeout)  # sleep会卡在这里。我去。原来是用的超时机制来做的sleep
-        self._process_events(event_list)  # 这里对event事件进行处理
+            event_list = self._selector.select(timeout)
+        self._process_events(event_list)
 
         # Handle 'later' callbacks that are ready.
         end_time = self.time() + self._clock_resolution
         while self._scheduled:
             handle = self._scheduled[0]
-            if handle._when >= end_time:  # 如果因为别的事件触发导致sleep被提前运行，也没事，直接跳过这次请求即可
+            if handle._when >= end_time:
                 break
             handle = heapq.heappop(self._scheduled)
             handle._scheduled = False
@@ -1761,14 +1758,13 @@ class BaseEventLoop(events.AbstractEventLoop):
         ntodo = len(self._ready)
         for i in range(ntodo):
             handle = self._ready.popleft()
-            # print(handle)
             if handle._cancelled:
                 continue
             if self._debug:
                 try:
                     self._current_handle = handle
                     t0 = self.time()
-                    handle._run()  # handle是个啥东西呀，咋还有一个_run方法
+                    handle._run()
                     dt = self.time() - t0
                     if dt >= self.slow_callback_duration:
                         logger.warning('Executing %s took %.3f seconds',
@@ -1795,7 +1791,7 @@ class BaseEventLoop(events.AbstractEventLoop):
         self._coroutine_origin_tracking_enabled = enabled
 
     def get_debug(self):
-        return self._debug  # 谁调用的。怎么就走到这来了。
+        return self._debug
 
     def set_debug(self, enabled):
         self._debug = enabled
