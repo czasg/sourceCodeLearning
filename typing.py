@@ -1,4 +1,4 @@
-"""
+""" -*- coding: utf-8 -*-
 The typing module: Support for gradual typing as defined by PEP 484.
 
 At large scale, the structure of the module is following:
