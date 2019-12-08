@@ -1,4 +1,4 @@
-#
+# -*- coding: utf-8 -*-
 # Copyright 2014 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -774,7 +774,7 @@ class HTTP1ServerConnection(object):
         :arg context: an opaque application-defined object that is accessible
             as ``connection.context``
         """
-        self.stream = stream  # ÕâÀïµÄstream¾ÍÊÇsockÀïÃæµÄrequest, ¶øÇÒÊÇ±»°ü×°¹ýµÄ
+        self.stream = stream  # è¿™é‡Œçš„streamå°±æ˜¯socké‡Œé¢çš„request, è€Œä¸”æ˜¯è¢«åŒ…è£…è¿‡çš„
         if params is None:
             params = HTTP1ConnectionParameters()
         self.params = params
@@ -800,8 +800,8 @@ class HTTP1ServerConnection(object):
 
         :arg delegate: a `.HTTPServerConnectionDelegate`
         """
-        assert isinstance(delegate, httputil.HTTPServerConnectionDelegate)
-        fut = gen.convert_yielded(self._server_request_loop(delegate))
+        assert isinstance(delegate, httputil.HTTPServerConnectionDelegate)  # 'tornado.httpserver.HTTPServer'
+        fut = gen.convert_yielded(self._server_request_loop(delegate))  # è¿™é‡Œçš„delegateæ˜¯ä»–è‡ªå·±
         self._serving_future = fut
         # Register the future on the IOLoop so its errors get logged.
         self.stream.io_loop.add_future(fut, lambda f: f.result())
@@ -810,9 +810,9 @@ class HTTP1ServerConnection(object):
         self, delegate: httputil.HTTPServerConnectionDelegate
     ) -> None:
         try:
-            while True:
-                conn = HTTP1Connection(self.stream, False, self.params, self.context)  # ·â×°Á¬½Ó¶ÔÏó
-                request_delegate = delegate.start_request(self, conn)  # delegate¾ÍÊÇHTTPServer -> µ÷ÓÃ·þÎñ¶ËµÄstart_request -> routing._RoutingDelegate
+            while True:  # æœ€ç»ˆæ¯ä¸€ä¸ªè¿žæŽ¥éƒ½ä¼šåœ¨è¿™é‡Œä¸€ç›´loopåˆ°æ­», çœ‹å‡ºæ¥äº†ï¼Œè¿”å›žä¸ºNone, ä¹Ÿå°±æ˜¯å¹¶ä¸å…³æ³¨ä½ è¿”å›žçš„æ˜¯ä»€ä¹ˆä¸œè¥¿
+                conn = HTTP1Connection(self.stream, False, self.params, self.context)  # å°è£…è¿žæŽ¥å¯¹è±¡
+                request_delegate = delegate.start_request(self, conn)  # delegateå°±æ˜¯HTTPServer -> è°ƒç”¨æœåŠ¡ç«¯çš„start_request -> routing._RoutingDelegate
                 try:
                     ret = await conn.read_response(request_delegate)
                 except (
