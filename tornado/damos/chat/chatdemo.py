@@ -82,13 +82,13 @@ global_message_buffer = MessageBuffer()
 
 class MainHandler(tornado.web.RequestHandler):
     async def get(self):  # 这种单纯的返回网页, 不需要使用异步的流程嘛
-        self.write("Hello world1")
-        self.flush()  # 先会显示一个,
+        # self.write("Hello world1")
+        # self.flush()  # 先会显示一个,
         import time, asyncio
         # await asyncio.sleep(10)
         # time.sleep(10)
-        self.write("Hello world2")  # 既然这样, 是不是可以利用这个时间差做一点坏事情呢
-        # self.render("index.html", messages=global_message_buffer.cache)
+        # self.write("Hello world2")  # 既然这样, 是不是可以利用这个时间差做一点坏事情呢
+        self.render("index.html", messages=global_message_buffer.cache)
 
 
 class MessageNewHandler(tornado.web.RequestHandler):

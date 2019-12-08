@@ -715,10 +715,10 @@ class RequestHandler(object):
         """
         self.set_cookie(
             name,
-            self.create_signed_value(name, value, version=version),
-            expires_days=expires_days,
+            self.create_signed_value(name, value, version=version),  # 把我们给的值进行了加密
+            expires_days=expires_days,  # secure - 帮我们设置了一个过期时间
             **kwargs
-        )
+        )  # 这里的值并不用来存储,
 
     def create_signed_value(
         self, name: str, value: Union[str, bytes], version: int = None
@@ -734,7 +734,7 @@ class RequestHandler(object):
            Added the ``version`` argument.  Introduced cookie version 2
            and made it the default.
         """
-        self.require_setting("cookie_secret", "secure cookies")
+        self.require_setting("cookie_secret", "secure cookies")  # secure必须需要secret
         secret = self.application.settings["cookie_secret"]
         key_version = None
         if isinstance(secret, dict):
@@ -742,7 +742,7 @@ class RequestHandler(object):
                 raise Exception("key_version setting must be used for secret_key dicts")
             key_version = self.application.settings["key_version"]
 
-        return create_signed_value(
+        return create_signed_value(  # 通过某种加算法，计算出一个啥玩意啊
             secret, name, value, version=version, key_version=key_version
         )
 
@@ -808,7 +808,7 @@ class RequestHandler(object):
             assert isinstance(status, int) and 300 <= status <= 399
         self.set_status(status)
         self.set_header("Location", utf8(url))
-        self.finish()
+        self.finish()  # redirect居然调用了finish，这个就不太友好了啊，没法处理后面的逻辑了
 
     def write(self, chunk: Union[str, bytes, dict]) -> None:
         """Writes the given chunk to the output buffer.
@@ -857,7 +857,7 @@ class RequestHandler(object):
         """
         if self._finished:
             raise RuntimeError("Cannot render() after finish()")
-        html = self.render_string(template_name, **kwargs)
+        html = self.render_string(template_name, **kwargs)  # 这个更狠, 不需要什么三方插件, 自己取出来自己拼，直接就弄好了啊
 
         # Insert the additional JS and CSS added by the modules on the page
         js_embed = []
@@ -915,7 +915,7 @@ class RequestHandler(object):
         if html_bodies:
             hloc = html.index(b"</body>")
             html = html[:hloc] + b"".join(html_bodies) + b"\n" + html[hloc:]
-        return self.finish(html)
+        return self.finish(html)  # render这个也执行了finish啊
 
     def render_linked_js(self, js_files: Iterable[str]) -> str:
         """Default method used to render the final js links for the
@@ -998,8 +998,8 @@ class RequestHandler(object):
             assert frame.f_code.co_filename is not None
             template_path = os.path.dirname(frame.f_code.co_filename)
         with RequestHandler._template_loader_lock:
-            if template_path not in RequestHandler._template_loaders:
-                loader = self.create_template_loader(template_path)
+            if template_path not in RequestHandler._template_loaders:  # 走的这
+                loader = self.create_template_loader(template_path)  # tornado.template.Loader
                 RequestHandler._template_loaders[template_path] = loader
             else:
                 loader = RequestHandler._template_loaders[template_path]
@@ -3369,7 +3369,7 @@ def create_signed_value(
     if version == 1:
         assert not isinstance(secret, dict)
         signature = _create_signature_v1(secret, name, value, timestamp)
-        value = b"|".join([value, timestamp, signature])
+        value = b"|".join([value, timestamp, signature])  # 把真实的值存为base64形式，且放在第一位--可以直接拿出来啊，不安全
         return value
     elif version == 2:
         # The v2 format consists of a version number and a series of
