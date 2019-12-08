@@ -172,7 +172,7 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
         # because we want its arguments to appear on the class
         # constructor. When changing this signature, also update the
         # copy in httpserver.rst.
-        self.request_callback = request_callback  # �������ӽ�����, ��ͨ���˻ص��������з�װ _CallableAdapter(self.request_callback, request_conn)
+        self.request_callback = request_callback  # _CallableAdapter(self.request_callback, request_conn)
         self.xheaders = xheaders
         self.protocol = protocol
         self.conn_params = HTTP1ConnectionParameters(
@@ -225,14 +225,16 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
             stream, address, self.protocol, self.trusted_downstream
         )
         conn = HTTP1ServerConnection(stream, self.conn_params, context)
-        self._connections.add(conn)  # ÿ����һ�����ӽ���, �Ͱ����浽���_connections����, ����, �е�о���
+        self._connections.add(conn)
         conn.start_serving(self)
 
     def start_request(
         self, server_conn: object, request_conn: httputil.HTTPConnection
     ) -> httputil.HTTPMessageDelegate:
-        if isinstance(self.request_callback, httputil.HTTPServerConnectionDelegate):
-            delegate = self.request_callback.start_request(server_conn, request_conn)  # class Router(httputil.HTTPServerConnectionDelegate): -> 跑到这来了start_request
+        # print(type(self.request_callback))  #'tornado.web.Application'
+        if isinstance(self.request_callback, httputil.HTTPServerConnectionDelegate):  # 走的这里
+            delegate = self.request_callback.start_request(server_conn, request_conn)  # 在这里调用了app里面的函数, 是第一次交集吗?
+            # 这里返回的delegate包含app、server_conn、request_conn，是一个_RoutingDelegate的实例
         else:
             delegate = _CallableAdapter(self.request_callback, request_conn)
 

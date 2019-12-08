@@ -813,6 +813,7 @@ class HTTP1ServerConnection(object):
             while True:  # 最终每一个连接都会在这里一直loop到死, 看出来了，返回为None, 也就是并不关注你返回的是什么东西
                 conn = HTTP1Connection(self.stream, False, self.params, self.context)  # 封装连接对象
                 request_delegate = delegate.start_request(self, conn)  # delegate就是HTTPServer -> 调用服务端的start_request -> routing._RoutingDelegate
+                # 这里返回的delegate包含app、server_conn、request_conn，是一个_RoutingDelegate的实例
                 try:
                     ret = await conn.read_response(request_delegate)
                 except (
