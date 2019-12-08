@@ -26,7 +26,28 @@ from tornado.options import define, options, parse_command_line
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=True, help="run in debug mode")
+"""
+同步和异步的概念描述的是用户线程与内核的交互方式：同步是指用户线程发起IO请求后需要等待或者轮询内核IO操作完成后才能继续执行；而异步是指用户线程发起IO请求后仍继续执行，当内核IO操作完成后会通知用户线程，或者调用用户线程注册的回调函数。
 
+1.1版本允许多个HTTP请求复用一个TCP连接，以加快传输速度。
+
+执行时机	                执行方法
+RequestHandler 实例化	initialize
+找到处理方法	            prepare
+调用处理方法	            get/post/put/delete/……
+请求处理完成	            on_finish
+
+方法	用户
+set_status	设置响应状态码
+set_header	设置响应头
+clear_header	清除已设置的响应头
+write	设置响应内容
+clear	清除已设置的响应头和响应正文
+flush	输出已设置的响应内容
+finish	结束此次请求
+render	调用模板生成响应内容，并结束会话
+redirect	重定向
+"""
 
 class MessageBuffer(object):
     def __init__(self):
@@ -60,7 +81,7 @@ global_message_buffer = MessageBuffer()
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self):
+    def get(self):  # 这种单纯的返回网页, 不需要使用异步的流程嘛
         self.render("index.html", messages=global_message_buffer.cache)
 
 
@@ -102,6 +123,8 @@ class MessageUpdatesHandler(tornado.web.RequestHandler):
             messages = global_message_buffer.get_messages_since(cursor)
         if self.request.connection.stream.closed():
             return
+        # import time
+        # time.sleep(10)
         print('MessageUpdatesHandler', messages)
         self.write(dict(messages=messages))  # 这个后端写的就很神奇了. 新用户建立连接就会完整的发送一份. 否则就发送最新的一条嘛
 
