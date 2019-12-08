@@ -279,6 +279,7 @@ class RequestHandler(object):
 
         Override this method to perform common initialization regardless
         of the request method.
+        按他这里的描述就是, prepare能够执行一些请求，而不需要管他们的请求方式
 
         Asynchronous support: Use ``async def`` or decorate this method with
         `.gen.coroutine` to make it asynchronous.
@@ -1676,7 +1677,7 @@ class RequestHandler(object):
             ) and self.application.settings.get("xsrf_cookies"):
                 self.check_xsrf_cookie()
 
-            result = self.prepare()
+            result = self.prepare()  # 怎么就在这里执行了一次prepare呢?
             if result is not None:
                 result = await result
             if self._prepared_future is not None:
@@ -1701,7 +1702,7 @@ class RequestHandler(object):
             if result is not None:
                 result = await result
             if self._auto_finish and not self._finished:
-                self.finish()
+                self.finish()  # 调用self.finish()就结束了
         except Exception as e:
             try:
                 self._handle_request_exception(e)
