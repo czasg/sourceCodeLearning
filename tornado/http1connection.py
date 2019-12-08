@@ -195,7 +195,7 @@ class HTTP1Connection(httputil.HTTPConnection):
                 except gen.TimeoutError:
                     self.close()
                     return False
-            start_line_str, headers = self._parse_headers(header_data)
+            start_line_str, headers = self._parse_headers(header_data)  # start_line_str请求头?... headers请求...
             if self.is_client:
                 resp_start_line = httputil.parse_response_start_line(start_line_str)
                 self._response_start_line = resp_start_line

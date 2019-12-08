@@ -172,7 +172,7 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
         # because we want its arguments to appear on the class
         # constructor. When changing this signature, also update the
         # copy in httpserver.rst.
-        self.request_callback = request_callback  # _CallableAdapter(self.request_callback, request_conn)
+        self.request_callback = request_callback
         self.xheaders = xheaders
         self.protocol = protocol
         self.conn_params = HTTP1ConnectionParameters(
