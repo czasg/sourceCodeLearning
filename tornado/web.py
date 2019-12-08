@@ -233,7 +233,10 @@ class RequestHandler(object):
         self.initialize(**kwargs)  # type: ignore
 
     def _initialize(self) -> None:
-        pass
+        """
+        所以这里可以做很多事情咯? 一些反爬中间件是不是也可以写在这里,
+        就和flask的before一个意思, 感觉还是不错的呀
+        """
 
     initialize = _initialize  # type: Callable[..., None]
     """Hook for subclass initialization. Called for each request.
@@ -1940,7 +1943,7 @@ class _ApplicationRouter(ReversibleRuleRouter):
         self, target: Any, request: httputil.HTTPServerRequest, **target_params: Any
     ) -> Optional[httputil.HTTPMessageDelegate]:
         if isclass(target) and issubclass(target, RequestHandler):
-            return self.application.get_handler_delegate(
+            return self.application.get_handler_delegate(  # !!!!
                 request, target, **target_params
             )
 
@@ -2294,7 +2297,7 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
         else:
             self.request.body = b"".join(self.chunks)
             self.request._parse_body()
-            self.execute()
+            self.execute()  # 这里是执行RequestHandler的入口吗??
 
     def on_connection_close(self) -> None:
         if self.stream_request_body:

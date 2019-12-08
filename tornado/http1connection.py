@@ -214,7 +214,7 @@ class HTTP1Connection(httputil.HTTPConnection):
                 )
             need_delegate_close = True
             with _ExceptionLoggingContext(app_log):
-                header_recv_future = delegate.headers_received(start_line, headers)
+                header_recv_future = delegate.headers_received(start_line, headers)  # 通过这个headers_received。匹配到正确的handler
                 if header_recv_future is not None:
                     await header_recv_future
             if self.stream is None:
