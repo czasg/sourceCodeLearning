@@ -328,7 +328,7 @@ class TCPServer(object):
                 )
 
             future = self.handle_stream(stream, address)  # 会注册一个未来对象到loop里面
-            if future is not None:
+            if future is not None:  # 也就是说一个http连接到了这之后接结束了, 剩下的事都在loop中
                 IOLoop.current().add_future(
                     gen.convert_yielded(future), lambda f: f.result()
                 )
