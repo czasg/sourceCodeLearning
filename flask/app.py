@@ -1885,7 +1885,6 @@ class Flask(_PackageBoundObject):
         adapter = _request_ctx_stack.top.url_adapter
         if hasattr(adapter, 'allowed_methods'):
             methods = adapter.allowed_methods()
-            print(methods)
         else:
             # fallback for Werkzeug < 0.7
             methods = []
