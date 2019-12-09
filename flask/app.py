@@ -1808,7 +1808,7 @@ class Flask(_PackageBoundObject):
         # request came with the OPTIONS method, reply automatically
         # print(getattr(rule, 'provide_automatic_options', False))
         if getattr(rule, 'provide_automatic_options', False) \
-                and req.method == 'OPTIONS':
+                and req.method == 'OPTIONS':  # 这里有一个可以自动处理options跨域请求的方法，不错哦
             return self.make_default_options_response()
         # otherwise dispatch to the handler for that endpoint
         # from pprint import pprint
@@ -1885,6 +1885,7 @@ class Flask(_PackageBoundObject):
         adapter = _request_ctx_stack.top.url_adapter
         if hasattr(adapter, 'allowed_methods'):
             methods = adapter.allowed_methods()
+            print(methods)
         else:
             # fallback for Werkzeug < 0.7
             methods = []
@@ -2103,8 +2104,8 @@ class Flask(_PackageBoundObject):
         if bp is not None and bp in self.before_request_funcs:
             funcs = chain(funcs, self.before_request_funcs[bp])
         for func in funcs:
-            rv = func()
-            if rv is not None:
+            rv = func()  # 就是在此处执行的before_request
+            if rv is not None:  # 中间件需要返回一个None才能正常继续，否则就会返回我们返回的内容
                 return rv
 
     def process_response(self, response):
