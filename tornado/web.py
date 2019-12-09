@@ -807,7 +807,7 @@ class RequestHandler(object):
         else:
             assert isinstance(status, int) and 300 <= status <= 399
         self.set_status(status)
-        self.set_header("Location", utf8(url))
+        self.set_header("Location", utf8(url))  # 让用户浏览器跳转到新的地址
         self.finish()  # redirect居然调用了finish，这个就不太友好了啊，没法处理后面的逻辑了
 
     def write(self, chunk: Union[str, bytes, dict]) -> None:

@@ -163,6 +163,9 @@ def exec_in(code: Any, glob: Dict[str, Any], loc: Mapping[str, Any] = None) -> N
         # exec(string) inherits the caller's future imports; compile
         # the string first to prevent that.
         code = compile(code, "<string>", "exec", dont_inherit=True)
+    # print(code)
+    # print(glob)
+    # print(loc)
     exec(code, glob, loc)
 
 
