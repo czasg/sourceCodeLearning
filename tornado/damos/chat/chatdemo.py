@@ -123,6 +123,7 @@ class MessageUpdatesHandler(tornado.web.RequestHandler):
             # on_connection_close.
             self.wait_future = global_message_buffer.cond.wait()
             try:
+                # 当没有数据的时候，正常访问此接口，就会在此进入等待状态。访问的那个就没了，但是不影响其他接口访问
                 await self.wait_future
             except asyncio.CancelledError:
                 return
@@ -149,7 +150,7 @@ def main():
         cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         static_path=os.path.join(os.path.dirname(__file__), "static"),
-        xsrf_cookies=True,
+        # xsrf_cookies=True,
         # debug=options.debug,
     )
     app.listen(options.port)
