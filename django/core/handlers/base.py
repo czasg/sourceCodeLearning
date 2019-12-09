@@ -98,18 +98,21 @@ class BaseHandler:
         """
         response = None
 
-        if hasattr(request, 'urlconf'):
+        if hasattr(request, 'urlconf'):  # False
             urlconf = request.urlconf
             set_urlconf(urlconf)
             resolver = get_resolver(urlconf)
         else:
-            resolver = get_resolver()
+            resolver = get_resolver()  # Here
 
         resolver_match = resolver.resolve(request.path_info)
+        # print(request.path_info)  # /
+        # print(resolver_match)  # ResolverMatch(func=learn_django.view.index, args=(), kwargs={}, url_name=None, app_names=[], namespaces=[], route=)
         callback, callback_args, callback_kwargs = resolver_match
         request.resolver_match = resolver_match
 
         # Apply view middleware
+        # print(self._view_middleware)  # [<bound method CsrfViewMiddleware.process_view of <django.middleware.csrf.CsrfViewMiddleware object at 0x03506430>>]
         for middleware_method in self._view_middleware:
             response = middleware_method(request, callback, callback_args, callback_kwargs)
             if response:
@@ -118,7 +121,7 @@ class BaseHandler:
         if response is None:
             wrapped_callback = self.make_view_atomic(callback)
             try:
-                response = wrapped_callback(request, *callback_args, **callback_kwargs)
+                response = wrapped_callback(request, *callback_args, **callback_kwargs)  # 这一步才是真正的运行了我们的目标函数
             except Exception as e:
                 response = self.process_exception_by_middleware(e, request)
 
