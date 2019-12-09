@@ -30,7 +30,7 @@ class BaseHandler:
         self._template_response_middleware = []
         self._exception_middleware = []
 
-        handler = convert_exception_to_response(self._get_response)
+        handler = convert_exception_to_response(self._get_response)  # 你mby，原来这里才是获取目标结果的地方
         for middleware_path in reversed(settings.MIDDLEWARE):
             middleware = import_string(middleware_path)
             try:
