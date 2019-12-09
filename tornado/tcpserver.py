@@ -70,13 +70,13 @@ class TCPServer(object):
 
             server = TCPServer()
             server.listen(8888)
-            IOLoop.current().start()
+            IOLoop.current().start()  # 这是最常规的单进程单线程异步轮询
 
     2. `bind`/`start`: simple multi-process::
 
             server = TCPServer()
             server.bind(8888)
-            server.start(0)  # Forks multiple sub-processes
+            server.start(0)  # Forks multiple sub-processes - 多进程
             IOLoop.current().start()
 
        When using this interface, an `.IOLoop` must *not* be passed
