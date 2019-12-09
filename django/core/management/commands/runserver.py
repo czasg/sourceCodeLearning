@@ -92,6 +92,8 @@ class Command(BaseCommand):
         if not self.addr:
             self.addr = self.default_addr_ipv6 if self.use_ipv6 else self.default_addr
             self._raw_ipv6 = self.use_ipv6
+        # print(options)
+        # {'verbosity': 1, 'settings': None, 'pythonpath': None, 'traceback': False, 'no_color': False, 'force_color': False, 'addrport': '127.0.0.1:8888', 'use_ipv6': False, 'use_threading': True, 'use_reloader': True, 'use_static_handler': True, 'insecure_serving': False}
         self.run(**options)
 
     def run(self, **options):

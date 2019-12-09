@@ -372,6 +372,9 @@ class ManagementUtility:
         elif self.argv[1:] in (['--help'], ['-h']):
             sys.stdout.write(self.main_help_text() + '\n')
         else:
+            # print(subcommand)  # runserver
+            # print(self.argv)  # [manage.py, runserver, 127.0.0.1:8888]
+            # print(self.fetch_command(subcommand))  # <django.contrib.staticfiles.management.commands.runserver.Command object at 0x02E0B650>
             self.fetch_command(subcommand).run_from_argv(self.argv)
 
 
