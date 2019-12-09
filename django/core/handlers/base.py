@@ -54,7 +54,15 @@ class BaseHandler:
                 self._template_response_middleware.append(mw_instance.process_template_response)
             if hasattr(mw_instance, 'process_exception'):
                 self._exception_middleware.append(mw_instance.process_exception)
-
+            """mw_instance
+            <django.middleware.clickjacking.XFrameOptionsMiddleware object at 0x034E2230>
+            <django.contrib.messages.middleware.MessageMiddleware object at 0x0306BFF0>
+            <django.contrib.auth.middleware.AuthenticationMiddleware object at 0x034F73B0>
+            <django.middleware.csrf.CsrfViewMiddleware object at 0x034F7410>
+            <django.middleware.common.CommonMiddleware object at 0x034F7470>
+            <django.contrib.sessions.middleware.SessionMiddleware object at 0x034F74D0>
+            <django.middleware.security.SecurityMiddleware object at 0x034F7530>
+            """
             handler = convert_exception_to_response(mw_instance)
 
         # We only assign to this when initialization is complete as it is used
