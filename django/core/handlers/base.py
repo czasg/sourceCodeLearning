@@ -126,7 +126,7 @@ class BaseHandler:
                 response = self.process_exception_by_middleware(e, request)
 
         # Complain if the view returned None (a common error).
-        if response is None:
+        if response is None:  # 所以django返回值必不能为None，必须返回HttpResponse类型的数据吗
             if isinstance(callback, types.FunctionType):    # FBV
                 view_name = callback.__name__
             else:                                           # CBV
