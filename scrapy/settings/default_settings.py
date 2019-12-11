@@ -243,8 +243,8 @@ ROBOTSTXT_OBEY = False
 
 SCHEDULER = 'scrapy.core.scheduler.Scheduler'
 SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleLifoDiskQueue'
-SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.LifoMemoryQueue'
-SCHEDULER_PRIORITY_QUEUE = 'queuelib.PriorityQueue'
+SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.LifoMemoryQueue'  # 后进先出的队列
+SCHEDULER_PRIORITY_QUEUE = 'queuelib.PriorityQueue'  # 一个字典，以优先权priority作为key，以FIFO queues为value。保存其中最小的，每次取值时，以最小的为key，从先进先出队列中pop一个值出来就完事了
 
 SPIDER_LOADER_CLASS = 'scrapy.spiderloader.SpiderLoader'
 SPIDER_LOADER_WARN_ONLY = False
