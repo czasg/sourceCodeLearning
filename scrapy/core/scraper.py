@@ -182,8 +182,9 @@ class Scraper(object):
         if not result:
             return defer_succeed(None)
         it = iter_errback(result, self.handle_spider_error, request, response, spider)
+        # 这段代码，使得整个流程是往下走的，或者往下走是一个优先的趋势，很强
         dfd = parallel(it, self.concurrent_items,
-            self._process_spidermw_output, request, response, spider)
+            self._process_spidermw_output, request, response, spider)  # 感觉就是因为这一段代码，导致整个流程就需要走完某一个函数
         return dfd
 
     def _process_spidermw_output(self, output, request, response, spider):  # 原来在这里，当前函数的执行结果是在这里进行处理的

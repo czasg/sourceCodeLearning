@@ -31,7 +31,7 @@ class Scheduler(object):
         pqclass = load_object(settings['SCHEDULER_PRIORITY_QUEUE'])  # 'queuelib.PriorityQueue'
         dqclass = load_object(
             settings['SCHEDULER_DISK_QUEUE'])  # 'scrapy.squeues.PickleLifoDiskQueue'，先进先出，使用pickle模块序列化
-        mqclass = load_object(settings['SCHEDULER_MEMORY_QUEUE'])  # 'scrapy.squeues.LifoMemoryQueue'，在内存先进先出队列中，没有序列化
+        mqclass = load_object(settings['SCHEDULER_MEMORY_QUEUE'])  # 'scrapy.squeues.LifoMemoryQueue'
         logunser = settings.getbool('LOG_UNSERIALIZABLE_REQUESTS', settings.getbool(
             'SCHEDULER_DEBUG'))  # ('LOG_UNSERIALIZABLE_REQUESTS', 'use SCHEDULER_DEBUG instead')
         return cls(dupefilter, jobdir=job_dir(settings), logunser=logunser,
@@ -42,7 +42,7 @@ class Scheduler(object):
 
     def open(self, spider):  # 首先执行了这个，
         self.spider = spider
-        self.mqs = self.pqclass(self._newmq)  # 在优先级队列面放了一个内存FIFO队列，这是什么操作
+        self.mqs = self.pqclass(self._newmq)  # 创建优先级最低的队列。还是一个LIFO队列，，醉了
         self.dqs = self._dq() if self.dqdir else None
         return self.df.open()
 
@@ -57,7 +57,7 @@ class Scheduler(object):
         if not request.dont_filter and self.df.request_seen(request):
             self.df.log(request, self.spider)
             return False
-        dqok = self._dqpush(request)
+        dqok = self._dqpush(request)  # 如果存在disk队列，就推到disk里面，不走mq-push的流程了
         if dqok:
             self.stats.inc_value('scheduler/enqueued/disk', spider=self.spider)
         else:
@@ -67,7 +67,7 @@ class Scheduler(object):
         return True
 
     def next_request(self):
-        request = self.mqs.pop()
+        request = self.mqs.pop()  # 首次从mqs中取不出数据，转而重dqs中取上次剩下的数据，可以的
         if request:
             self.stats.inc_value('scheduler/dequeued/memory', spider=self.spider)
         else:
@@ -102,7 +102,7 @@ class Scheduler(object):
         else:
             return True
 
-    def _mqpush(self, request):
+    def _mqpush(self, request):  # 也就是对于设置了代理的爬虫可以早点让他重试是没问题的
         self.mqs.push(request, -request.priority)
 
     def _dqpop(self):

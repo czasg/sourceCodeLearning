@@ -162,7 +162,7 @@ class ExecutionEngine(object):
                 """
                 break
 
-        if slot.start_requests and not self._needs_backout(spider):
+        if slot.start_requests and not self._needs_backout(spider):  # 卧槽，这个_needs_backout原来可以控制并发的大小
             try:
                 request = next(slot.start_requests)  # 数据就是从这里，一个一个的从start_requests调出来然后再推进去的，神奇的异步
             except StopIteration:
