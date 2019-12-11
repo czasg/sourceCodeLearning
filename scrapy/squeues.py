@@ -5,7 +5,7 @@ Scheduler queues
 import marshal
 from six.moves import cPickle as pickle
 
-from queuelib import queue
+from queuelib import queue, PriorityQueue
 
 def _serializable_queue(queue_class, serialize, deserialize):
 
