@@ -42,7 +42,7 @@ update_telnet_vars = object()
 class TelnetConsole(protocol.ServerFactory):
 
     def __init__(self, crawler):
-        if not crawler.settings.getbool('TELNETCONSOLE_ENABLED'):
+        if not crawler.settings.getbool('TELNETCONSOLE_ENABLED'):  # 1
             raise NotConfigured
         if not TWISTED_CONCH_AVAILABLE:
             raise NotConfigured(
@@ -50,10 +50,10 @@ class TelnetConsole(protocol.ServerFactory):
                 'modules failed to import:\n' + _TWISTED_CONCH_TRACEBACK)
         self.crawler = crawler
         self.noisy = False
-        self.portrange = [int(x) for x in crawler.settings.getlist('TELNETCONSOLE_PORT')]
-        self.host = crawler.settings['TELNETCONSOLE_HOST']
-        self.username = crawler.settings['TELNETCONSOLE_USERNAME']
-        self.password = crawler.settings['TELNETCONSOLE_PASSWORD']
+        self.portrange = [int(x) for x in crawler.settings.getlist('TELNETCONSOLE_PORT')]  # [6023, 6073]
+        self.host = crawler.settings['TELNETCONSOLE_HOST']  # 127.0.0.1
+        self.username = crawler.settings['TELNETCONSOLE_USERNAME']  # scrapy
+        self.password = crawler.settings['TELNETCONSOLE_PASSWORD']  # None
 
         if not self.password:
             self.password = binascii.hexlify(os.urandom(8)).decode('utf8')
