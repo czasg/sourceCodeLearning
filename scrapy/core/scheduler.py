@@ -26,11 +26,14 @@ class Scheduler(object):
     def from_crawler(cls, crawler):  # 这里是真正的实例化入口
         settings = crawler.settings
         dupefilter_cls = load_object(settings['DUPEFILTER_CLASS'])  # 'scrapy.dupefilters.RFPDupeFilter' 过滤的咯
-        dupefilter = create_instance(dupefilter_cls, settings, crawler)  # objcls.from_crawler(crawler, *args, **kwargs)执行from-settings实例化
-        pqclass = load_object(settings['SCHEDULER_PRIORITY_QUEUE'])  #  'queuelib.PriorityQueue'
-        dqclass = load_object(settings['SCHEDULER_DISK_QUEUE'])  # 'scrapy.squeues.PickleLifoDiskQueue'，先进先出，使用pickle模块序列化
-        mqclass = load_object(settings['SCHEDULER_MEMORY_QUEUE']) # 'scrapy.squeues.LifoMemoryQueue'，在内存先进先出队列中，没有序列化
-        logunser = settings.getbool('LOG_UNSERIALIZABLE_REQUESTS', settings.getbool('SCHEDULER_DEBUG'))  # ('LOG_UNSERIALIZABLE_REQUESTS', 'use SCHEDULER_DEBUG instead')
+        dupefilter = create_instance(dupefilter_cls, settings,
+                                     crawler)  # objcls.from_crawler(crawler, *args, **kwargs)执行from-settings实例化
+        pqclass = load_object(settings['SCHEDULER_PRIORITY_QUEUE'])  # 'queuelib.PriorityQueue'
+        dqclass = load_object(
+            settings['SCHEDULER_DISK_QUEUE'])  # 'scrapy.squeues.PickleLifoDiskQueue'，先进先出，使用pickle模块序列化
+        mqclass = load_object(settings['SCHEDULER_MEMORY_QUEUE'])  # 'scrapy.squeues.LifoMemoryQueue'，在内存先进先出队列中，没有序列化
+        logunser = settings.getbool('LOG_UNSERIALIZABLE_REQUESTS', settings.getbool(
+            'SCHEDULER_DEBUG'))  # ('LOG_UNSERIALIZABLE_REQUESTS', 'use SCHEDULER_DEBUG instead')
         return cls(dupefilter, jobdir=job_dir(settings), logunser=logunser,
                    stats=crawler.stats, pqclass=pqclass, dqclass=dqclass, mqclass=mqclass)  # 初始化时队列为空，并没有往里面推数据
 
@@ -83,6 +86,7 @@ class Scheduler(object):
             return
         try:
             reqd = request_to_dict(request, self.spider)
+            # reqd is {'url': 'https://www.baidu.com', 'callback': 'parse1', 'errback': None, 'method': 'GET', 'headers': {b'Accept': [b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'], b'Accept-Language': [b'en'], b'User-Agent': [b'Scrapy/1.6.0 (+https://scrapy.org)'], b'Accept-Encoding': [b'gzip,deflate'], b'Referer': [b'https://www.baidu.com']}, 'body': b'', 'cookies': {}, 'meta': {'download_timeout': 180.0, 'download_slot': 'www.baidu.com', 'download_latency': 0.16184186935424805, 'depth': 1}, '_encoding': 'utf-8', 'priority': 0, 'dont_filter': True, 'flags': []}
             self.dqs.push(reqd, -request.priority)
         except ValueError as e:  # non serializable request
             if self.logunser:
@@ -117,7 +121,7 @@ class Scheduler(object):
         activef = join(self.dqdir, 'active.json')
         if exists(activef):
             with open(activef) as f:
-                prios = json.load(f)
+                prios = json.load(f)  # get the priority level of active.json
         else:
             prios = ()
         q = self.pqclass(self._newdq, startprios=prios)
