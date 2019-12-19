@@ -13,3 +13,4 @@ def test():
 if __name__ == '__main__':
     app.register_blueprint(users, url_prefix="/test")
     app.run(port=8888)
+
