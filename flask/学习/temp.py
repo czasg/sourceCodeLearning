@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, request, abort
 
 app = Flask(__name__)
 bp = Blueprint("bp", __name__)
@@ -27,7 +27,10 @@ def bp_req():
 
 @app.before_request
 def ha():
-    pass
+    if request.method == "GET" and request.args.get("pass") == "cza":
+        pass
+    else:
+        abort(404)
 
 
 @app.url_value_preprocessor
