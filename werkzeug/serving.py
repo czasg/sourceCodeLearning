@@ -249,7 +249,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                         reraise(*exc_info)
                 finally:
                     exc_info = None
-            elif headers_set:
+            elif headers_set:  # you can just execute this func once.
                 raise AssertionError('Headers already set')
             headers_set[:] = [status, response_headers]
             return write

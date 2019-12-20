@@ -2333,7 +2333,7 @@ class Flask(_PackageBoundObject):
             except:
                 error = sys.exc_info()[1]
                 raise
-            return response(environ, start_response)
+            return response(environ, start_response)  # type: Response
         finally:
             if self.should_ignore_error(error):
                 error = None
