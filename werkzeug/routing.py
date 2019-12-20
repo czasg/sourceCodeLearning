@@ -1533,6 +1533,7 @@ class MapAdapter(object):
         )
 
         have_match_for = set()
+
         for rule in self.map._rules:
             try:
                 rv = rule.match(path, method)

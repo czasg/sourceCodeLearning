@@ -1212,10 +1212,10 @@ class Flask(_PackageBoundObject):
         # Add the required methods now.
         methods |= required_methods
 
-        rule = self.url_rule_class(rule, methods=methods, **options)
+        rule = self.url_rule_class(rule, methods=methods, **options)  # type: Rule
         rule.provide_automatic_options = provide_automatic_options
         # print(rule)
-        self.url_map.add(rule)
+        self.url_map.add(rule)  # type: Map
         if view_func is not None:
             old_func = self.view_functions.get(endpoint)
             if old_func is not None and old_func != view_func:
@@ -2035,6 +2035,23 @@ class Flask(_PackageBoundObject):
             # in Werkzeug but it currently does not have that feature.
             subdomain = ((self.url_map.default_subdomain or None)
                          if not self.subdomain_matching else None)
+            """
+            def on_index(request):
+                return Response('Hello from the index')
+
+            url_map = Map([Rule('/', endpoint='index')])  # 这里是路由，这里的endpoint就是用来在字典中查询用的
+            views = {'index': on_index}  # 业务逻辑函数映射表。endpoint作为字典的key
+            
+            urls = url_map.bind("example.com", "/")
+            print(urls.match("/", "GET"))  # 返回endpoint，和路径上对应的参数
+
+            @responder
+            def application(environ, start_response):
+                request = Request(environ)
+                urls = url_map.bind_to_environ(environ)  # 这是获取所有的urls嘛
+                return urls.dispatch(lambda e, v: views[e](request, **v),
+                                     catch_http_exceptions=True)
+            """
             return self.url_map.bind_to_environ(
                 request.environ,
                 server_name=self.config['SERVER_NAME'],
