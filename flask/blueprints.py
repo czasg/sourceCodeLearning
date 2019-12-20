@@ -183,7 +183,7 @@ class Blueprint(_PackageBoundObject):
                 view_func=self.send_static_file, endpoint='static'
             )
 
-        for deferred in self.deferred_functions:
+        for deferred in self.deferred_functions:  # this is important! register blue-print into flask-app
             deferred(state)
 
     def route(self, rule, **options):
