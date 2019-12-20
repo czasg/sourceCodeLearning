@@ -340,7 +340,7 @@ class RequestContext(object):
         """
         try:
             url_rule, self.request.view_args = \
-                self.url_adapter.match(return_rule=True)
+                self.url_adapter.match(return_rule=True)  # type:
             self.request.url_rule = url_rule
         except HTTPException as e:
             self.request.routing_exception = e
@@ -366,7 +366,7 @@ class RequestContext(object):
         # print(top, app_ctx)  # None None -- 初始都是来年各个None
         if app_ctx is None or app_ctx.app != self.app:
             app_ctx = self.app.app_context()  # 创建一个新的appContext
-            app_ctx.push()  # 腿带stack里面咯
+            app_ctx.push()  # type: AppContext.push()
             self._implicit_app_ctx_stack.append(app_ctx)
         else:
             self._implicit_app_ctx_stack.append(None)

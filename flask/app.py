@@ -1212,6 +1212,7 @@ class Flask(_PackageBoundObject):
         # Add the required methods now.
         methods |= required_methods
 
+        # 这里有两个容器，一个_rules是列表，一个_rules_by_endpoint是字典。列表的话元素都是Rule，字典的key就是endpoint
         rule = self.url_rule_class(rule, methods=methods, **options)  # type: Rule
         rule.provide_automatic_options = provide_automatic_options
         # print(rule)
@@ -1807,15 +1808,11 @@ class Flask(_PackageBoundObject):
         # if we provide automatic options for this URL and the
         # request came with the OPTIONS method, reply automatically
         # print(getattr(rule, 'provide_automatic_options', False))
+
         if getattr(rule, 'provide_automatic_options', False) \
                 and req.method == 'OPTIONS':  # 这里有一个可以自动处理options跨域请求的方法，不错哦
             return self.make_default_options_response()
         # otherwise dispatch to the handler for that endpoint
-        # from pprint import pprint
-        # pprint(self.view_functions)  # 原来如此，也没什么高级的写法啊。映射所有的func和endpoint到这张子带你
-        # print(req.view_args)
-        # print(self.view_functions[rule.endpoint])  # 这个就是开发对应写的目标函数了，但是后面穿的子带你是几个意思
-        # print(self.view_functions[rule.endpoint](**req.view_args))  # 好吧，原来是需要传值的
         return self.view_functions[rule.endpoint](**req.view_args)
 
     def full_dispatch_request(self):
@@ -1825,10 +1822,10 @@ class Flask(_PackageBoundObject):
 
         .. versionadded:: 0.7
         """
-        self.try_trigger_before_first_request_functions()
+        self.try_trigger_before_first_request_functions()  # 这玩意整个服务启动后就只会执行一次
         try:
             request_started.send(self)
-            rv = self.preprocess_request()
+            rv = self.preprocess_request()  # 预处理app和蓝图，还执行了before_request，只有返回值，就不会走view流程
             if rv is None:
                 rv = self.dispatch_request()  # 此处拿到的就是目标函数返回的结果了
         except Exception as e:
@@ -1848,7 +1845,7 @@ class Flask(_PackageBoundObject):
 
         :internal:
         """
-        response = self.make_response(rv)  # 其实就是把对应的request用response包装一下就对了
+        response = self.make_response(rv)  # type: Response
         try:
             response = self.process_response(response)
             request_finished.send(self, response=response)
@@ -2116,9 +2113,10 @@ class Flask(_PackageBoundObject):
         for func in funcs:
             func(request.endpoint, request.view_args)
 
-        funcs = self.before_request_funcs.get(None, ())
+        funcs = self.before_request_funcs.get(None, ())  # 只要注册了@app.before_request，就会将func添加到列表里
         if bp is not None and bp in self.before_request_funcs:
             funcs = chain(funcs, self.before_request_funcs[bp])
+
         for func in funcs:
             rv = func()  # 就是在此处执行的before_request
             if rv is not None:  # 中间件需要返回一个None才能正常继续，否则就会返回我们返回的内容
@@ -2137,8 +2135,7 @@ class Flask(_PackageBoundObject):
         :return: a new response object or the same, has to be an
                  instance of :attr:`response_class`.
         """
-        ctx = _request_ctx_stack.top  # 返回线程上下文变量request
-        # print(ctx, id(ctx), id(self))
+        ctx = _request_ctx_stack.top
         bp = ctx.request.blueprint
         funcs = ctx._after_request_functions
         if bp is not None and bp in self.after_request_funcs:
@@ -2324,11 +2321,11 @@ class Flask(_PackageBoundObject):
             start the response.
         """
         # print(_request_ctx_stack._local.__storage__)
-        ctx = self.request_context(environ)  # 申请一个新的RequestContext
+        ctx = self.request_context(environ)  # 申请一个新的RequestContext, 在这一步已经url_adapter.match匹配好了Rule，存放到request的url_rule里面
         error = None
         try:
             try:
-                ctx.push()
+                ctx.push()  # 创建了AppContext，里面配置有g，将app和request推到安全线程本地变量中
                 response = self.full_dispatch_request()
             except Exception as e:
                 error = e
