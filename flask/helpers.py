@@ -880,7 +880,7 @@ class _PackageBoundObject(object):
         self.import_name = import_name
         self.template_folder = template_folder
 
-        if root_path is None:
+        if root_path is None:  # 原来如此，这里的root_path是根据实际的__name__来进行指定的
             root_path = get_root_path(self.import_name)
 
         self.root_path = root_path
