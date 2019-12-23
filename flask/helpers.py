@@ -901,10 +901,10 @@ class _PackageBoundObject(object):
     del _get_static_folder, _set_static_folder
 
     def _get_static_url_path(self):
-        if self._static_url_path is not None:
+        if self._static_url_path is not None:  # 需要定义static_url_path才能够指定鼎泰文件
             return self._static_url_path
 
-        if self.static_folder is not None:
+        if self.static_folder is not None:  # 如果只定义了static_folder则就只会是默认路径
             return '/' + os.path.basename(self.static_folder)  # 此处就是获取到的 /static
 
     def _set_static_url_path(self, value):
