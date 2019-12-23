@@ -905,7 +905,7 @@ class _PackageBoundObject(object):
             return self._static_url_path
 
         if self.static_folder is not None:
-            return '/' + os.path.basename(self.static_folder)
+            return '/' + os.path.basename(self.static_folder)  # 此处就是获取到的 /static
 
     def _set_static_url_path(self, value):
         self._static_url_path = value

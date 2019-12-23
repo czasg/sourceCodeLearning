@@ -376,7 +376,7 @@ class Flask(_PackageBoundObject):
             self.static_url_path = static_url_path
 
         if static_folder is not None:
-            self.static_folder = static_folder
+            self.static_folder = static_folder  # 这里是一个属性方法，执行了_set_static_folder，将static_folder赋值给了_static_folder
 
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
