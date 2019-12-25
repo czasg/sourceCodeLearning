@@ -52,9 +52,8 @@ def long_task(self):
     total = random.randint(10, 50)
     for i in range(total):
         if not message or random.random() < 0.25:
-            message = '{0} {1} {2}...'.format(random.choice(verb),
-                                              random.choice(adjective),
-                                              random.choice(noun))
+            message = f'{random.choice(verb)} {random.choice(adjective)} {random.choice(noun)}...'
+
         self.update_state(state='PROGRESS',
                           meta={'current': i, 'total': total,
                                 'status': message})
