@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import os
 import random
 import time
 from flask import Flask, request, render_template, session, flash, redirect, \
     url_for, jsonify
-from flask_mail import Mail, Message
+# from flask_mail import Mail, Message
 from celery import Celery
 
 
@@ -43,7 +44,7 @@ celery.conf.update(app.config)
 
 
 @celery.task(bind=True)
-def long_task(self):
+def long_task(self):  # Not execute in flask process/thread
     """Background task that runs a long function with progress reports."""
     verb = ['Starting up', 'Booting', 'Repairing', 'Loading', 'Checking']
     adjective = ['master', 'radiant', 'silent', 'harmonic', 'fast']
@@ -53,7 +54,6 @@ def long_task(self):
     for i in range(total):
         if not message or random.random() < 0.25:
             message = f'{random.choice(verb)} {random.choice(adjective)} {random.choice(noun)}...'
-
         self.update_state(state='PROGRESS',
                           meta={'current': i, 'total': total,
                                 'status': message})
@@ -89,9 +89,9 @@ def index():
 
 @app.route('/longtask', methods=['POST'])
 def longtask():
-    task = long_task.apply_async()
-    return jsonify({}), 202, {'Location': url_for('taskstatus',
-                                                  task_id=task.id)}
+    task = long_task.apply_async()  # don't blocking in here.
+    return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
+    # return redirect(url_for("taskstatus", task_id=task.id), code=202)
 
 
 @app.route('/status/<task_id>')
