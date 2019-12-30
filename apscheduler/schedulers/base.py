@@ -975,7 +975,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
                         # Otherwise remove it from the job store.
                         job_next_run = job.trigger.get_next_fire_time(run_times[-1], now)
                         if job_next_run:
-                            job._modify(next_run_time=job_next_run)
+                            job._modify(next_run_time=job_next_run)  # whats? are you kidding me?
                             jobstore.update_job(job)
                         else:
                             self.remove_job(job.id, jobstore_alias)
