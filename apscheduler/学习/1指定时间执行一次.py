@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -10,5 +11,5 @@ def my_job(text):
     print("hello world")
 
 
-sch.add_job(my_job, 'date', run_date=next, args=['text'])  # run_date='2019-12-30 16:30:05' / Î´Ö¸¶¨Ê±¼ä, Ôò»áÁ¢¼´Ö´ĞĞ
+sch.add_job(my_job, 'date', run_date=next, args=['text'])  # run_date='2019-12-30 16:30:05' / æœªæŒ‡å®šæ—¶é—´, åˆ™ä¼šç«‹å³æ‰§è¡Œ
 sch.start()
