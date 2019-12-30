@@ -15,7 +15,7 @@ class BlockingScheduler(BaseScheduler):
 
     def start(self, *args, **kwargs):
         self._event = Event()
-        super(BlockingScheduler, self).start(*args, **kwargs)
+        super(BlockingScheduler, self).start(*args, **kwargs)  # call wakeup in start first
         self._main_loop()
 
     def shutdown(self, wait=True):
@@ -24,10 +24,10 @@ class BlockingScheduler(BaseScheduler):
 
     def _main_loop(self):
         wait_seconds = TIMEOUT_MAX
-        while self.state != STATE_STOPPED:
+        while self.state != STATE_STOPPED:  # `while` loop
             self._event.wait(wait_seconds)
             self._event.clear()
-            wait_seconds = self._process_jobs()
+            wait_seconds = self._process_jobs()  # calculate the shortest time
 
     def wakeup(self):
         self._event.set()
