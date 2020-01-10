@@ -11,7 +11,7 @@ import select
 from kafka.vendor import six
 
 import kafka.errors
-from kafka.errors import (UnknownError, ConnectionError, FailedPayloadsError,
+from kafka.errors import (UnknownError, KafkaConnectionError, FailedPayloadsError,
                           KafkaTimeoutError, KafkaUnavailableError,
                           LeaderNotAvailableError, UnknownTopicOrPartitionError,
                           NotLeaderForPartitionError, ReplicaNotAvailableError)
@@ -71,19 +71,9 @@ class SimpleClient(object):
             )
 
         conn = self._conns[host_key]
-        conn.connect()
-        if conn.connected():
-            return conn
-
-        timeout = time.time() + self.timeout
-        while time.time() < timeout and conn.connecting():
-            if conn.connect() is ConnectionStates.CONNECTED:
-                break
-            else:
-                time.sleep(0.05)
-        else:
+        if not conn.connect_blocking(self.timeout):
             conn.close()
-            raise ConnectionError("%s:%s (%s)" % (host, port, afi))
+            raise KafkaConnectionError("%s:%s (%s)" % (host, port, afi))
         return conn
 
     def _get_leader_for_partition(self, topic, partition):
@@ -166,7 +156,7 @@ class SimpleClient(object):
         for (host, port, afi) in hosts:
             try:
                 conn = self._get_conn(host, port, afi)
-            except ConnectionError:
+            except KafkaConnectionError:
                 log.warning("Skipping unconnected connection: %s:%s (AFI %s)",
                             host, port, afi)
                 continue
@@ -175,7 +165,8 @@ class SimpleClient(object):
 
             # Block
             while not future.is_done:
-                conn.recv()
+                for r, f in conn.recv():
+                    f.success(r)
 
             if future.failed():
                 log.error("Request failed: %s", future.exception)
@@ -183,7 +174,7 @@ class SimpleClient(object):
 
             return decoder_fn(future.value)
 
-        raise KafkaUnavailableError('All servers failed to process request: %s' % hosts)
+        raise KafkaUnavailableError('All servers failed to process request: %s' % (hosts,))
 
     def _payloads_by_broker(self, payloads):
         payloads_by_broker = collections.defaultdict(list)
@@ -251,7 +242,7 @@ class SimpleClient(object):
             host, port, afi = get_ip_port_afi(broker.host)
             try:
                 conn = self._get_conn(host, broker.port, afi)
-            except ConnectionError:
+            except KafkaConnectionError:
                 refresh_metadata = True
                 failed_payloads(broker_payloads)
                 continue
@@ -288,7 +279,8 @@ class SimpleClient(object):
 
                 if not future.is_done:
                     conn, _ = connections_by_future[future]
-                    conn.recv()
+                    for r, f in conn.recv():
+                        f.success(r)
                     continue
 
                 _, broker = connections_by_future.pop(future)
@@ -352,10 +344,8 @@ class SimpleClient(object):
         try:
             host, port, afi = get_ip_port_afi(broker.host)
             conn = self._get_conn(host, broker.port, afi)
-            conn.send(request_id, request)
-
-        except ConnectionError as e:
-            log.warning('ConnectionError attempting to send request %s '
+        except KafkaConnectionError as e:
+            log.warning('KafkaConnectionError attempting to send request %s '
                         'to server %s: %s', request_id, broker, e)
 
             for payload in payloads:
@@ -364,6 +354,11 @@ class SimpleClient(object):
 
         # No exception, try to get response
         else:
+
+            future = conn.send(request_id, request)
+            while not future.is_done:
+                for r, f in conn.recv():
+                    f.success(r)
 
             # decoder_fn=None signal that the server is expected to not
             # send a response.  This probably only applies to
@@ -376,18 +371,17 @@ class SimpleClient(object):
                     responses[topic_partition] = None
                 return []
 
-            try:
-                response = conn.recv(request_id)
-            except ConnectionError as e:
-                log.warning('ConnectionError attempting to receive a '
+            if future.failed():
+                log.warning('Error attempting to receive a '
                             'response to request %s from server %s: %s',
-                            request_id, broker, e)
+                            request_id, broker, future.exception)
 
                 for payload in payloads:
                     topic_partition = (payload.topic, payload.partition)
                     responses[topic_partition] = FailedPayloadsError(payload)
 
             else:
+                response = future.value
                 _resps = []
                 for payload_response in decoder_fn(response):
                     topic_partition = (payload_response.topic,
@@ -400,7 +394,7 @@ class SimpleClient(object):
         return [responses[tp] for tp in original_ordering]
 
     def __repr__(self):
-        return '<KafkaClient client_id=%s>' % (self.client_id)
+        return '<SimpleClient client_id=%s>' % (self.client_id)
 
     def _raise_on_response_error(self, resp):
 

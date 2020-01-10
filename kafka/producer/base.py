@@ -14,13 +14,13 @@ from threading import Thread, Event
 
 from kafka.vendor import six
 
-from kafka.structs import (
-    ProduceRequestPayload, ProduceResponsePayload, TopicPartition, RetryOptions)
 from kafka.errors import (
     kafka_errors, UnsupportedCodecError, FailedPayloadsError,
     RequestTimedOutError, AsyncProducerQueueFull, UnknownError,
     RETRY_ERROR_TYPES, RETRY_BACKOFF_ERROR_TYPES, RETRY_REFRESH_ERROR_TYPES)
 from kafka.protocol import CODEC_NONE, ALL_CODECS, create_message_set
+from kafka.structs import (
+    ProduceRequestPayload, ProduceResponsePayload, TopicPartition, RetryOptions)
 
 log = logging.getLogger('kafka.producer')
 
@@ -83,7 +83,7 @@ def _send_upstream(queue, client, codec, batch_time, batch_size,
         try:
             client.reinit()
         except Exception as e:
-            log.warn('Async producer failed to connect to brokers; backoff for %s(ms) before retrying', retry_options.backoff_ms)
+            log.warning('Async producer failed to connect to brokers; backoff for %s(ms) before retrying', retry_options.backoff_ms)
             time.sleep(float(retry_options.backoff_ms) / 1000)
         else:
             break
@@ -189,12 +189,12 @@ def _send_upstream(queue, client, codec, batch_time, batch_size,
 
         # doing backoff before next retry
         if retry_state['do_backoff'] and retry_options.backoff_ms:
-            log.warn('Async producer backoff for %s(ms) before retrying', retry_options.backoff_ms)
+            log.warning('Async producer backoff for %s(ms) before retrying', retry_options.backoff_ms)
             time.sleep(float(retry_options.backoff_ms) / 1000)
 
         # refresh topic metadata before next retry
         if retry_state['do_refresh']:
-            log.warn('Async producer forcing metadata refresh metadata before retrying')
+            log.warning('Async producer forcing metadata refresh metadata before retrying')
             try:
                 client.load_metadata_for_topics()
             except Exception:
@@ -226,7 +226,7 @@ class Producer(object):
 
     Arguments:
         client (kafka.SimpleClient): instance to use for broker
-            communications. If async=True, the background thread will use
+            communications. If async_send=True, the background thread will use
             :meth:`client.copy`, which is expected to return a thread-safe
             object.
         codec (kafka.protocol.ALL_CODECS): compression codec to use.
@@ -238,11 +238,11 @@ class Producer(object):
         sync_fail_on_error (bool, optional): whether sync producer should
             raise exceptions (True), or just return errors (False),
             defaults to True.
-        async (bool, optional): send message using a background thread,
+        async_send (bool, optional): send message using a background thread,
             defaults to False.
-        batch_send_every_n (int, optional): If async is True, messages are
+        batch_send_every_n (int, optional): If async_send is True, messages are
             sent in batches of this size, defaults to 20.
-        batch_send_every_t (int or float, optional): If async is True,
+        batch_send_every_t (int or float, optional): If async_send is True,
             messages are sent immediately after this timeout in seconds, even
             if there are fewer than batch_send_every_n, defaults to 20.
         async_retry_limit (int, optional): number of retries for failed messages
@@ -268,8 +268,10 @@ class Producer(object):
             defaults to 30.
 
     Deprecated Arguments:
+        async (bool, optional): send message using a background thread,
+            defaults to False. Deprecated, use 'async_send'
         batch_send (bool, optional): If True, messages are sent by a background
-            thread in batches, defaults to False. Deprecated, use 'async'
+            thread in batches, defaults to False. Deprecated, use 'async_send'
     """
     ACK_NOT_REQUIRED = 0            # No ack is required
     ACK_AFTER_LOCAL_WRITE = 1       # Send response after it is written to log
@@ -282,8 +284,8 @@ class Producer(object):
                  codec=None,
                  codec_compresslevel=None,
                  sync_fail_on_error=SYNC_FAIL_ON_ERROR_DEFAULT,
-                 async=False,
-                 batch_send=False,  # deprecated, use async
+                 async_send=False,
+                 batch_send=False,  # deprecated, use async_send
                  batch_send_every_n=BATCH_SEND_MSG_COUNT,
                  batch_send_every_t=BATCH_SEND_DEFAULT_INTERVAL,
                  async_retry_limit=ASYNC_RETRY_LIMIT,
@@ -292,15 +294,21 @@ class Producer(object):
                  async_queue_maxsize=ASYNC_QUEUE_MAXSIZE,
                  async_queue_put_timeout=ASYNC_QUEUE_PUT_TIMEOUT,
                  async_log_messages_on_error=ASYNC_LOG_MESSAGES_ON_ERROR,
-                 async_stop_timeout=ASYNC_STOP_TIMEOUT_SECS):
+                 async_stop_timeout=ASYNC_STOP_TIMEOUT_SECS,
+                 **kwargs):
 
-        if async:
+        # async renamed async_send for python3.7 support
+        if 'async' in kwargs:
+            log.warning('Deprecated async option found -- use async_send')
+            async_send = kwargs['async']
+
+        if async_send:
             assert batch_send_every_n > 0
             assert batch_send_every_t > 0
             assert async_queue_maxsize >= 0
 
         self.client = client
-        self.async = async
+        self.async_send = async_send
         self.req_acks = req_acks
         self.ack_timeout = ack_timeout
         self.stopped = False
@@ -308,12 +316,12 @@ class Producer(object):
         if codec is None:
             codec = CODEC_NONE
         elif codec not in ALL_CODECS:
-            raise UnsupportedCodecError("Codec 0x%02x unsupported" % codec)
+            raise UnsupportedCodecError("Codec 0x%02x unsupported" % (codec,))
 
         self.codec = codec
         self.codec_compresslevel = codec_compresslevel
 
-        if self.async:
+        if self.async_send:
             # Messages are sent through this queue
             self.queue = Queue(async_queue_maxsize)
             self.async_queue_put_timeout = async_queue_put_timeout
@@ -364,7 +372,6 @@ class Producer(object):
         Raises:
             FailedPayloadsError: low-level connection error, can be caused by
                 networking failures, or a malformed request.
-            ConnectionError:
             KafkaUnavailableError: all known brokers are down when attempting
                 to refresh metadata.
             LeaderNotAvailableError: topic or partition is initializing or
@@ -400,7 +407,7 @@ class Producer(object):
         if key is not None and not isinstance(key, six.binary_type):
             raise TypeError("the key must be type bytes")
 
-        if self.async:
+        if self.async_send:
             for idx, m in enumerate(msg):
                 try:
                     item = (TopicPartition(topic, partition), m, key)
@@ -412,7 +419,7 @@ class Producer(object):
                     raise AsyncProducerQueueFull(
                         msg[idx:],
                         'Producer async queue overfilled. '
-                        'Current queue size %d.' % self.queue.qsize())
+                        'Current queue size %d.' % (self.queue.qsize(),))
             resp = []
         else:
             messages = create_message_set([(m, key) for m in msg], self.codec, key, self.codec_compresslevel)
@@ -435,7 +442,7 @@ class Producer(object):
             log.warning('timeout argument to stop() is deprecated - '
                         'it will be removed in future release')
 
-        if not self.async:
+        if not self.async_send:
             log.warning('producer.stop() called, but producer is not async')
             return
 
@@ -443,7 +450,7 @@ class Producer(object):
             log.warning('producer.stop() called, but producer is already stopped')
             return
 
-        if self.async:
+        if self.async_send:
             self.queue.put((STOP_ASYNC_PRODUCER, None, None))
             self.thread_stop_event.set()
             self.thread.join()
@@ -471,5 +478,5 @@ class Producer(object):
         self.stopped = True
 
     def __del__(self):
-        if self.async and not self.stopped:
+        if self.async_send and not self.stopped:
             self.stop()

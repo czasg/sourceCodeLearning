@@ -8,12 +8,12 @@ import time
 
 from kafka.vendor import six
 
-from .. import errors as Errors
-from ..metrics.measurable import AnonMeasurable
-from ..metrics.stats import Avg, Max, Rate
-from ..protocol.produce import ProduceRequest
-from ..structs import TopicPartition
-from ..version import __version__
+from kafka import errors as Errors
+from kafka.metrics.measurable import AnonMeasurable
+from kafka.metrics.stats import Avg, Max, Rate
+from kafka.protocol.produce import ProduceRequest
+from kafka.structs import TopicPartition
+from kafka.version import __version__
 
 log = logging.getLogger(__name__)
 
@@ -103,10 +103,11 @@ class Sender(threading.Thread):
             self._metadata.request_update()
 
         # remove any nodes we aren't ready to send to
-        not_ready_timeout = 999999999
+        not_ready_timeout = float('inf')
         for node in list(ready_nodes):
-            if not self._client.ready(node):
+            if not self._client.is_ready(node):
                 log.debug('Node %s not ready; delaying produce of accumulated batch', node)
+                self._client.maybe_connect(node, wakeup=False)
                 ready_nodes.remove(node)
                 not_ready_timeout = min(not_ready_timeout,
                                         self._client.connection_delay(node))
@@ -144,7 +145,7 @@ class Sender(threading.Thread):
         for node_id, request in six.iteritems(requests):
             batches = batches_by_node[node_id]
             log.debug('Sending Produce Request: %r', request)
-            (self._client.send(node_id, request)
+            (self._client.send(node_id, request, wakeup=False)
                  .add_callback(
                      self._handle_produce_response, node_id, time.time(), batches)
                  .add_errback(
@@ -156,7 +157,7 @@ class Sender(threading.Thread):
         # difference between now and its linger expiry time; otherwise the
         # select time will be the time difference between now and the
         # metadata expiry time
-        self._client.poll(poll_timeout_ms)
+        self._client.poll(timeout_ms=poll_timeout_ms)
 
     def initiate_close(self):
         """Start closing the sender (won't complete until all data is sent)."""
@@ -288,11 +289,14 @@ class Sender(threading.Thread):
             topic = batch.topic_partition.topic
             partition = batch.topic_partition.partition
 
-            # TODO: bytearray / memoryview
             buf = batch.records.buffer()
             produce_records_by_partition[topic][partition] = buf
 
-        if self.config['api_version'] >= (0, 10):
+        kwargs = {}
+        if self.config['api_version'] >= (0, 11):
+            version = 3
+            kwargs = dict(transactional_id=None)
+        elif self.config['api_version'] >= (0, 10):
             version = 2
         elif self.config['api_version'] == (0, 9):
             version = 1
@@ -303,12 +307,16 @@ class Sender(threading.Thread):
             timeout=timeout,
             topics=[(topic, list(partition_info.items()))
                     for topic, partition_info
-                    in six.iteritems(produce_records_by_partition)]
+                    in six.iteritems(produce_records_by_partition)],
+            **kwargs
         )
 
     def wakeup(self):
         """Wake up the selector associated with this send thread."""
         self._client.wakeup()
+
+    def bootstrap_connected(self):
+        return self._client.bootstrap_connected()
 
 
 class SenderMetrics(object):
