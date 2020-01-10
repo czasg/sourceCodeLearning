@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#
 # Copyright 2009 Facebook
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -26,35 +26,14 @@ from tornado.options import define, options, parse_command_line
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=True, help="run in debug mode")
-"""
-同步和异步的概念描述的是用户线程与内核的交互方式：同步是指用户线程发起IO请求后需要等待或者轮询内核IO操作完成后才能继续执行；而异步是指用户线程发起IO请求后仍继续执行，当内核IO操作完成后会通知用户线程，或者调用用户线程注册的回调函数。
 
-1.1版本允许多个HTTP请求复用一个TCP连接，以加快传输速度。
-
-执行时机	                执行方法
-RequestHandler 实例化	initialize
-找到处理方法	            prepare
-调用处理方法	            get/post/put/delete/……
-请求处理完成	            on_finish
-
-方法	用户
-set_status	设置响应状态码
-set_header	设置响应头
-clear_header	清除已设置的响应头
-write	设置响应内容
-clear	清除已设置的响应头和响应正文
-flush	输出已设置的响应内容
-finish	结束此次请求
-render	调用模板生成响应内容，并结束会话
-redirect	重定向
-"""
 
 class MessageBuffer(object):
     def __init__(self):
         # cond is notified whenever the message cache is updated
         self.cond = tornado.locks.Condition()
         self.cache = []
-        self.cache_size = 200  # 原来还是可以做缓存的. 控制队列大小的方式, [:] = [-max_size:]
+        self.cache_size = 200
 
     def get_messages_since(self, cursor):
         """Returns a list of messages newer than the given cursor.
@@ -70,10 +49,10 @@ class MessageBuffer(object):
         return results
 
     def add_message(self, message):
-        self.cache.append(message)  # 缓存数据消息
+        self.cache.append(message)
         if len(self.cache) > self.cache_size:
             self.cache = self.cache[-self.cache_size :]
-        self.cond.notify_all()  # 释放锁
+        self.cond.notify_all()
 
 
 # Making this a non-singleton is left as an exercise for the reader.
@@ -81,13 +60,7 @@ global_message_buffer = MessageBuffer()
 
 
 class MainHandler(tornado.web.RequestHandler):
-    async def get(self):  # 这种单纯的返回网页, 不需要使用异步的流程嘛
-        # self.write("Hello world1")
-        # self.flush()  # 先会显示一个,
-        import time, asyncio
-        # await asyncio.sleep(10)
-        # time.sleep(10)
-        # self.write("Hello world2")  # 既然这样, 是不是可以利用这个时间差做一点坏事情呢
+    def get(self):
         self.render("index.html", messages=global_message_buffer.cache)
 
 
@@ -101,7 +74,6 @@ class MessageNewHandler(tornado.web.RequestHandler):
         message["html"] = tornado.escape.to_unicode(
             self.render_string("message.html", message=message)
         )
-        print('MessageNewHandler', message)
         if self.get_argument("next", None):
             self.redirect(self.get_argument("next"))
         else:
@@ -123,17 +95,13 @@ class MessageUpdatesHandler(tornado.web.RequestHandler):
             # on_connection_close.
             self.wait_future = global_message_buffer.cond.wait()
             try:
-                # 当没有数据的时候，正常访问此接口，就会在此进入等待状态。访问的那个就没了，但是不影响其他接口访问
                 await self.wait_future
             except asyncio.CancelledError:
                 return
             messages = global_message_buffer.get_messages_since(cursor)
         if self.request.connection.stream.closed():
             return
-        # import time
-        # time.sleep(10)
-        print('MessageUpdatesHandler', messages)
-        self.write(dict(messages=messages))  # 这个后端写的就很神奇了. 新用户建立连接就会完整的发送一份. 否则就发送最新的一条嘛
+        self.write(dict(messages=messages))
 
     def on_connection_close(self):
         self.wait_future.cancel()
@@ -150,8 +118,8 @@ def main():
         cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         static_path=os.path.join(os.path.dirname(__file__), "static"),
-        # xsrf_cookies=True,
-        # debug=options.debug,
+        xsrf_cookies=True,
+        debug=options.debug,
     )
     app.listen(options.port)
     tornado.ioloop.IOLoop.current().start()

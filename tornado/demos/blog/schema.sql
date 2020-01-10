@@ -41,4 +41,3 @@ CREATE TABLE entries (
 );
 
 CREATE INDEX ON entries (published);
-ALERT TABLE entries ADD INDEX idx_published (published);

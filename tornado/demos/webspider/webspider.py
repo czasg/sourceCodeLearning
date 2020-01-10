@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 import time
-import atexit
 from datetime import timedelta
 
 from html.parser import HTMLParser
@@ -9,16 +8,8 @@ from urllib.parse import urljoin, urldefrag
 
 from tornado import gen, httpclient, ioloop, queues
 
-# base_url = "http://www.tornadoweb.org/en/stable/"
-base_url = "http://fanyi.youdao.com/"
+base_url = "http://www.tornadoweb.org/en/stable/"
 concurrency = 10
-
-
-def python_exit():
-    print('python exit')
-
-
-atexit.register(python_exit)
 
 
 async def get_links_from_url(url):
@@ -36,7 +27,7 @@ async def get_links_from_url(url):
 
 
 def remove_fragment(url):
-    pure_url, frag = urldefrag(url)  # gen.html#tornado.gen.coroutine => gen.html
+    pure_url, frag = urldefrag(url)
     return pure_url
 
 
@@ -67,19 +58,16 @@ async def main():
 
         print("fetching %s" % current_url)
         fetching.add(current_url)
-        urls = await get_links_from_url(current_url)  # 某种程度上来说可以理解为全站爬取了嘛
+        urls = await get_links_from_url(current_url)
         fetched.add(current_url)
-        count = 0
+
         for new_url in urls:
             # Only follow links beneath the base URL
-            if new_url.startswith(base_url):  # 可以. 很强
-                count += 1
-                if count == 5:
-                    break
+            if new_url.startswith(base_url):
                 await q.put(new_url)
 
     async def worker():
-        async for url in q:  # 这玩意还能循环使用嘛
+        async for url in q:
             if url is None:
                 return
             try:
@@ -108,4 +96,3 @@ async def main():
 if __name__ == "__main__":
     io_loop = ioloop.IOLoop.current()
     io_loop.run_sync(main)
-    # print([remove_fragment("")])

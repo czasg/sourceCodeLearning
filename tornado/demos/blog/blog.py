@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import aiomysql
+import aiopg
 import bcrypt
 import markdown
 import os.path
@@ -31,16 +31,12 @@ import unicodedata
 from tornado.options import define, options
 
 define("port", default=8888, help="run on the given port", type=int)
-# define("db_host", default="127.0.0.1", help="blog database host")
-# define("db_port", default=5432, help="blog database port")
-# define("db_database", default="blog", help="blog database name")
-# define("db_user", default="blog", help="blog database user")
-# define("db_password", default="blog", help="blog database password")
-define("db_host", default="localhost", help="blog database host")
-define("db_port", default=3306, help="blog database port")
-define("db_database", default="cza", help="blog database name")
-define("db_user", default="root", help="blog database user")
-define("db_password", default="cza19950917", help="blog database password")
+define("db_host", default="127.0.0.1", help="blog database host")
+define("db_port", default=5432, help="blog database port")
+define("db_database", default="blog", help="blog database name")
+define("db_user", default="blog", help="blog database user")
+define("db_password", default="blog", help="blog database password")
+
 
 class NoResultError(Exception):
     pass
@@ -48,8 +44,7 @@ class NoResultError(Exception):
 
 async def maybe_create_tables(db):
     try:
-        async with db.acquire() as conn:
-            cur = await conn.cursor()
+        with (await db.cursor()) as cur:
             await cur.execute("SELECT COUNT(*) FROM entries LIMIT 1")
             await cur.fetchone()
     except psycopg2.ProgrammingError:
@@ -98,8 +93,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
         Must be called with ``await self.execute(...)``
         """
-        async with (await self.application.db.acquire()) as conn:
-            cur = await conn.cursor()
+        with (await self.application.db.cursor()) as cur:
             await cur.execute(stmt, args)
 
     async def query(self, stmt, *args):
@@ -113,10 +107,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
             for row in await self.query(...)
         """
-        async with (await self.application.db.acquire()) as conn:
-            cur = await conn.cursor()
-            print(stmt)
-            print(args)
+        with (await self.application.db.cursor()) as cur:
             await cur.execute(stmt, args)
             return [self.row_to_obj(row, cur) for row in await cur.fetchall()]
 
@@ -248,10 +239,9 @@ class AuthCreateHandler(BaseHandler):
             tornado.escape.utf8(self.get_argument("password")),
             bcrypt.gensalt(),
         )
-        # print(self.get_argument("email"), self.get_argument("name"))
-        # print(tornado.escape.to_unicode(hashed_password))
         author = await self.queryone(
-            "INSERT INTO `authors` (`email`, `name`, `hashed_password`) VALUES (%s, %s, %s)",
+            "INSERT INTO authors (email, name, hashed_password) "
+            "VALUES (%s, %s, %s) RETURNING id",
             self.get_argument("email"),
             self.get_argument("name"),
             tornado.escape.to_unicode(hashed_password),
@@ -276,14 +266,13 @@ class AuthLoginHandler(BaseHandler):
         except NoResultError:
             self.render("login.html", error="email not found")
             return
-        hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
+        password_equal = await tornado.ioloop.IOLoop.current().run_in_executor(
             None,
-            bcrypt.hashpw,
+            bcrypt.checkpw,
             tornado.escape.utf8(self.get_argument("password")),
             tornado.escape.utf8(author.hashed_password),
         )
-        hashed_password = tornado.escape.to_unicode(hashed_password)
-        if hashed_password == author.hashed_password:
+        if password_equal:
             self.set_secure_cookie("blogdemo_user", str(author.id))
             self.redirect(self.get_argument("next", "/"))
         else:
@@ -305,31 +294,22 @@ async def main():
     tornado.options.parse_command_line()
 
     # Create the global connection pool.
-    db = await aiomysql.create_pool(
+    async with aiopg.create_pool(
         host=options.db_host,
         port=options.db_port,
         user=options.db_user,
         password=options.db_password,
-        db=options.db_database,
-        charset='utf8',
-    )
-    await maybe_create_tables(db)
-    app = Application(db)
-    app.listen(options.port)
+        dbname=options.db_database,
+    ) as db:
+        await maybe_create_tables(db)
+        app = Application(db)
+        app.listen(options.port)
 
-    # In this demo the server will simply run until interrupted
-    # with Ctrl-C, but if you want to shut down more gracefully,
-    # call shutdown_event.set().
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
-    app = Application(db)
-    app.listen(options.port)
-
-    # In this demo the server will simply run until interrupted
-    # with Ctrl-C, but if you want to shut down more gracefully,
-    # call shutdown_event.set().
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
+        # In this demo the server will simply run until interrupted
+        # with Ctrl-C, but if you want to shut down more gracefully,
+        # call shutdown_event.set().
+        shutdown_event = tornado.locks.Event()
+        await shutdown_event.wait()
 
 
 if __name__ == "__main__":
