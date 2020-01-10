@@ -23,7 +23,7 @@ class TextResponse(Response):
     _DEFAULT_ENCODING = 'ascii'
 
     def __init__(self, *args, **kwargs):
-        # print(args, kwargs)  # url=url, status=status, headers=headers, body=body, flags=flags 五个参数
+        # print(args, kwargs)  # url=url, status=status, headers=headers, body=body, flags=flags 浜斾釜鍙傛暟
         self._encoding = kwargs.pop('encoding', None)
         self._cached_benc = None
         self._cached_ubody = None
@@ -52,7 +52,7 @@ class TextResponse(Response):
 
     def replace(self, *args, **kwargs):
         kwargs.setdefault('encoding', self.encoding)
-        return Response.replace(self, *args, **kwargs)  # 原来如此，这里的self可太骚了. 将自己作为instance传递过去而来
+        return Response.replace(self, *args, **kwargs)  # 鍘熸潵濡傛锛岃繖閲岀殑self鍙お楠氫簡. 灏嗚嚜宸变綔涓篿nstance浼犻�掕繃鍘昏�屾潵
 
     @property
     def encoding(self):
