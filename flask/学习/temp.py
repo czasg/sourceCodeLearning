@@ -1,56 +1,43 @@
-from flask import Flask, Blueprint, request, abort
+from flask import Flask, render_template, views, jsonify
 
 app = Flask(__name__)
-bp = Blueprint("bp", __name__)
 
 
-@app.route("/")
-def index():
-    return "hei"
+class JsonView(views.View):
+    def get_response(self):
+        raise NotImplementedError()
+
+    def dispatch_request(self):
+        response = self.get_response()
+        return jsonify(response)
 
 
-@bp.route("/")
-def test():
-    return "test"
+class IndexView(JsonView):
+    def get_response(self):
+        context = {
+            'username': 'ivy'
+        }
+        return context
 
 
-@app.route("/mul/ha/hi")
-def mul():
-    # return "cza", 200, ("Content-Type","text/html")
-    return "cza", 200
+app.add_url_rule('/', view_func=IndexView.as_view('index'))
 
 
-@bp.before_request  # app.before_request_funcs[self.name].append
-def bp_req():
-    pass
+class FakeView(object):
+    def __init__(self):
+        super().__init__()
+        self.context = {
+            'username': 'ivy',
+        }
 
 
-@app.before_request
-def ha():
-    if request.method == "GET" and request.args.get("pass") == "cza":
-        pass
-    else:
-        abort(404)
+class TestView(JsonView, FakeView):
+    def get_response(self):
+        self.context.update({'age': 23})
+        return self.context
 
 
-@app.url_value_preprocessor
-def funcfunc(endpoint, view_args):
-    # print(endpoint, view_args)
-    ...
-
+app.add_url_rule('/test', view_func=TestView.as_view('test'))
 
 if __name__ == '__main__':
-    app.register_blueprint(bp, url_prefix="/bp")  # will register func into flask-app
-    app.run(port=8888)
-
-    # from werkzeug.routing import Map, Rule
-    #
-    # map = Map([
-    #     Rule('/', endpoint='index'),
-    #     Rule('/downloads', endpoint='downloads/index'),
-    #     Rule('/downloads/<int:id>', endpoint='downloads/show')
-    # ])
-    # urls = map.bind("example.com", "/")
-    # print(urls.match("/", "GET"))
-    # print(urls.match("/downloads"))
-    # print(urls.match("/downloads/42"))
+    app.run()
