@@ -134,7 +134,13 @@ class _WebSocketParams(object):
 
 
 class WebSocketHandler(tornado.web.RequestHandler):
-    """Subclass this class to create a basic WebSocket handler.
+    """
+    on_message -> receive message
+    write_message -> send message -> ws_connection.write_message
+    open -> after establishing the connection
+    on_close -> after disconnection
+
+    Subclass this class to create a basic WebSocket handler.
 
     Override `on_message` to handle incoming messages, and use
     `write_message` to send messages to the client. You can also
@@ -947,7 +953,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         handler.set_header("Upgrade", "websocket")
         handler.set_header("Connection", "Upgrade")
         handler.set_header("Sec-WebSocket-Accept", self._challenge_response(handler))
-        handler.finish()
+        handler.finish()  # finish protocol verification, keep long alive.
 
         self.stream = handler._detach_stream()
 
