@@ -245,7 +245,7 @@ class TCPServer(object):
             process.fork_processes(num_processes, max_restarts)
         sockets = self._pending_sockets
         self._pending_sockets = []
-        self.add_sockets(sockets)
+        self.add_sockets(sockets)  # just add sockets? but those sockets have been listing.
 
     def stop(self) -> None:
         """Stops listening for new connections.
