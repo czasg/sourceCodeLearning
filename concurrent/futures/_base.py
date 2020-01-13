@@ -194,7 +194,12 @@ def _yield_finished_futures(fs, waiter, ref_collect):
 
 
 def as_completed(fs, timeout=None):  # 谁先完成就pass，后续会继续上锁的，莫慌
-    """An iterator over the given futures that yields each as it completes.
+    """
+    all futures in tasks, and they sharing just one waiter, so once task is over,
+    there will trigger the Event.set(). wake the wait, and get the finished task,
+    yield from `those tasks`.
+
+    An iterator over the given futures that yields each as it completes.
 
     Args:
         fs: The sequence of Futures (possibly created by different Executors) to
@@ -237,9 +242,9 @@ def as_completed(fs, timeout=None):  # 谁先完成就pass，后续会继续上�
                             '%d (of %d) futures unfinished' % (
                             len(pending), total_futures))
 
-            waiter.event.wait(wait_timeout)
+            waiter.event.wait(wait_timeout)  # all futures sharing one waiter?
 
-            with waiter.lock:
+            with waiter.lock:  # when there is one future done, trigger the set(), and finish task in here.
                 finished = waiter.finished_futures
                 waiter.finished_futures = []
                 waiter.event.clear()
@@ -258,7 +263,11 @@ def as_completed(fs, timeout=None):  # 谁先完成就pass，后续会继续上�
 DoneAndNotDoneFutures = collections.namedtuple(
         'DoneAndNotDoneFutures', 'done not_done')  # 创建一个namedtuple => (done, not_done) 两个属性
 def wait(fs, timeout=None, return_when=ALL_COMPLETED):
-    """Wait for the futures in the given sequence to complete.
+    """
+    like the as_complete, but if `return_when` is FIRST_COMPLETE,
+    it will just run once or done one task. other will ignore?
+
+    Wait for the futures in the given sequence to complete.
 
     Args:
         fs: The sequence of Futures (possibly created by different Executors) to
@@ -403,7 +412,7 @@ class Future(object):
             if self._state not in [CANCELLED, CANCELLED_AND_NOTIFIED, FINISHED]:
                 self._done_callbacks.append(fn)
                 return
-        fn(self)  # 将函数fn添加到待回调队列中，并执行一次函数吗
+        fn(self)  # if state is normal, will not go here.
 
     def result(self, timeout=None):
         """Return the result of the call that the future represents.
@@ -579,14 +588,14 @@ class Executor(object):
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
-        def result_iterator():
+        def result_iterator():  # wow! good way. event you not operate it, the future will still works.
             try:
                 # reverse to keep finishing order
                 fs.reverse()
                 while fs:
                     # Careful not to keep a reference to the popped future
                     if timeout is None:
-                        yield fs.pop().result()
+                        yield fs.pop().result()  # for i in ...: will blocking here
                     else:
                         yield fs.pop().result(end_time - time.monotonic())
             finally:
