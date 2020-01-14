@@ -1697,7 +1697,7 @@ class RequestHandler(object):
                 except iostream.StreamClosedError:
                     return
 
-            method = getattr(self, self.request.method.lower())  # 哦豁, 被我找到了, 调出request的method, 然后执行, 可以的
+            method = getattr(self, self.request.method.lower())  # this func should return None or await
             result = method(*self.path_args, **self.path_kwargs)
             if result is not None:
                 result = await result
