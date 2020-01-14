@@ -63,7 +63,7 @@ class BaseAsyncIOLoop(IOLoop):
         for loop in list(IOLoop._ioloop_for_asyncio):
             if loop.is_closed():
                 del IOLoop._ioloop_for_asyncio[loop]
-        IOLoop._ioloop_for_asyncio[asyncio_loop] = self
+        IOLoop._ioloop_for_asyncio[asyncio_loop] = self  # add self into dict so you can get next
 
         self._thread_identity = 0
 
@@ -226,6 +226,7 @@ class AsyncIOMainLoop(BaseAsyncIOLoop):
     """
 
     def initialize(self, **kwargs: Any) -> None:  # type: ignore
+        # use asyncio.get_event_loop() as an asyncio_loop.
         super(AsyncIOMainLoop, self).initialize(asyncio.get_event_loop(), **kwargs)
 
     def make_current(self) -> None:
