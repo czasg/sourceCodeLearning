@@ -90,6 +90,7 @@ def _worker(executor_reference, work_queue, initializer, initargs):  # 线程调
             #   - The interpreter is shutting down OR
             #   - The executor that owns the worker has been collected OR
             #   - The executor that owns the worker has been shutdown.
+            print(_shutdown, executor is None, executor._shutdown)
             if _shutdown or executor is None or executor._shutdown:
                 # Flag the executor as shutting down as early as possible if it
                 # is not gc-ed yet.
@@ -137,7 +138,7 @@ class ThreadPoolExecutor(_base.Executor):
             raise TypeError("initializer must be a callable")
 
         self._max_workers = max_workers
-        self._work_queue = queue.SimpleQueue()
+        self._work_queue = queue.Queue()
         self._threads = set()
         self._broken = False
         self._shutdown = False

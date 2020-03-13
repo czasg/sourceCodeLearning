@@ -4,7 +4,7 @@
 """Execute computations asynchronously using threads or processes."""
 
 __author__ = 'Brian Quinlan (brian@sweetapp.com)'
-
+from concurrent.futures.thread import *
 from concurrent.futures._base import (FIRST_COMPLETED,
                                       FIRST_EXCEPTION,
                                       ALL_COMPLETED,

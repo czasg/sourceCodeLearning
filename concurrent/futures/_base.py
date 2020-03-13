@@ -110,7 +110,7 @@ class _AllCompletedWaiter(_Waiter):  # 这也太普通了把...
 
     def __init__(self, num_pending_calls, stop_on_exception):
         self.num_pending_calls = num_pending_calls  # 等待数量
-        self.stop_on_exception = stop_on_exception  # 异常数量
+        self.stop_on_exception = stop_on_exception
         self.lock = threading.Lock()
         super().__init__()
 
@@ -142,8 +142,8 @@ class _AcquireFutures(object):
         self.futures = sorted(futures, key=id)
 
     def __enter__(self):
-        for future in self.futures:
-            future._condition.acquire()
+        for future in self.futures:  # each Future has a Condition Object
+            future._condition.acquire()  # so this step is not blocking
 
     def __exit__(self, *args):
         for future in self.futures:
@@ -166,7 +166,7 @@ def _create_and_install_waiters(fs, return_when):
             raise ValueError("Invalid return condition: %r" % return_when)
 
     for f in fs:
-        f._waiters.append(waiter)  # 原来在这里添加了waiter
+        f._waiters.append(waiter)
 
     return waiter
 
@@ -232,7 +232,7 @@ def as_completed(fs, timeout=None):  # 谁先完成就pass，后续会继续上�
         yield from _yield_finished_futures(finished, waiter,
                                            ref_collect=(fs,))
 
-        while pending:
+        while pending:  # future object
             if timeout is None:
                 wait_timeout = None
             else:
@@ -290,10 +290,10 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
         completed. The second set, named 'not_done', contains uncompleted
         futures.
     """
-    with _AcquireFutures(fs):  # 遍历所有未来对象，并一个一个的请求锁操作
+    with _AcquireFutures(fs):
         done = set(f for f in fs
-                   if f._state in [CANCELLED_AND_NOTIFIED, FINISHED])  # 这是一个已完成的集合
-        not_done = set(fs) - done  # 没完成的就是直接相减，简单粗暴啊
+                   if f._state in [CANCELLED_AND_NOTIFIED, FINISHED])
+        not_done = set(fs) - done
 
         if (return_when == FIRST_COMPLETED) and done:
             return DoneAndNotDoneFutures(done, not_done)
@@ -307,11 +307,10 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
 
         waiter = _create_and_install_waiters(fs, return_when)
 
-    waiter.event.wait(timeout)  # 当没有超时的时候。该出会一直阻塞直至有人set_result激活waiter中的_decrement_pending_calls。调度执行Event.set()
-    for f in fs:  # 当event被触发后，遍历所有的未来对象?这里会不会太僵硬了啊。没有办法指定目标嘛
+    waiter.event.wait(timeout)
+    for f in fs:  # all_complete, if code here, all future has done
         with f._condition:
             f._waiters.remove(waiter)
-    # waiter就是在主线程阻塞等待结果。子线程获取到了结果，然后看是哪种模式，全等待模式则等待所有的任务全部完成后再释放锁，任意pass则只需要有一个pass就可以释放锁
     done.update(waiter.finished_futures)
     return DoneAndNotDoneFutures(done, set(fs) - done)
 # 未来对象
@@ -519,7 +518,7 @@ class Future(object):
                                 self._state)
                 raise RuntimeError('Future in unexpected state')
 
-    def set_result(self, result):  # 当获取结果的时候，调用该函数进行赋值并处罚回调函数
+    def set_result(self, result):
         """Sets the return value of work associated with the future.
 
         Should only be used by Executor implementations and unit tests.
@@ -528,7 +527,7 @@ class Future(object):
             self._result = result
             self._state = FINISHED
             for waiter in self._waiters:
-                waiter.add_result(self)  # 当有人完成的时候，执行add_result。触发
+                waiter.add_result(self)
             self._condition.notify_all()  # 通知所有锁
         self._invoke_callbacks()
 
