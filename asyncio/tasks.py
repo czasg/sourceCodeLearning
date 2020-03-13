@@ -307,13 +307,13 @@ class Task(futures._PyFuture):  # Inherit Python Task implementation
 _PyTask = Task
 
 
-try:
-    import _asyncio
-except ImportError:
-    pass
-else:
-    # _CTask is needed for tests.
-    Task = _CTask = _asyncio.Task
+# try:
+#     import _asyncio
+# except ImportError:
+#     pass
+# else:
+#     # _CTask is needed for tests.
+#     Task = _CTask = _asyncio.Task
 
 
 def create_task(coro):
