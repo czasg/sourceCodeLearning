@@ -86,3 +86,5 @@ class DecompressionMiddleware(object):
                              {'responsefmt': fmt}, extra={'spider': spider})
                 return new_response
         return response
+
+## 这个模块厉害了，能够检测目标文件是否为 压缩文件等，秀

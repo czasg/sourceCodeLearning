@@ -76,7 +76,7 @@ class MediaPipeline(object):
 
     def process_item(self, item, spider):
         info = self.spiderinfo
-        requests = arg_to_iter(self.get_media_requests(item, info))
+        requests = arg_to_iter(self.get_media_requests(item, info))  # 1、get_media_requests获取可迭代请求数据
         dlist = [self._process_request(r, info) for r in requests]
         dfd = DeferredList(dlist, consumeErrors=1)
         return dfd.addCallback(self.item_completed, item, info)
@@ -102,8 +102,8 @@ class MediaPipeline(object):
 
         # Download request checking media_to_download hook output first
         info.downloading.add(fp)
-        dfd = mustbe_deferred(self.media_to_download, request, info)
-        dfd.addCallback(self._check_media_to_download, request, info)
+        dfd = mustbe_deferred(self.media_to_download, request, info)  # Check request before starting download
+        dfd.addCallback(self._check_media_to_download, request, info)  # media_downloaded handler download result
         dfd.addBoth(self._cache_result_and_execute_waiters, fp, info)
         dfd.addErrback(lambda f: logger.error(
             f.value, exc_info=failure_to_exc_info(f), extra={'spider': info.spider})
