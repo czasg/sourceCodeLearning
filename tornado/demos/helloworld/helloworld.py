@@ -33,7 +33,9 @@ def main():
     tornado.options.parse_command_line()
     application = tornado.web.Application([(r"/", MainHandler)])
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(options.port)
+    # http_server.listen(options.port)
+    http_server.bind(8888)
+    http_server.start(0)
     tornado.ioloop.IOLoop.current().start()
 
 
