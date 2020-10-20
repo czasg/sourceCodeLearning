@@ -943,7 +943,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
                 for job in due_jobs:
                     # Look up the job's executor
                     try:
-                        executor = self._lookup_executor(job.executor)
+                        executor = self._lookup_executor(job.executor)  # 找到该job对应的executor
                     except:
                         self._logger.error(
                             'Executor lookup ("%s") failed for job "%s" -- removing it from the '
@@ -951,11 +951,11 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
                         self.remove_job(job.id, jobstore_alias)
                         continue
 
-                    run_times = job._get_run_times(now)
+                    run_times = job._get_run_times(now)  # 以当前时间为基准，检测当前调度应该执行多少次
                     run_times = run_times[-1:] if run_times and job.coalesce else run_times
                     if run_times:
                         try:
-                            executor.submit_job(job, run_times)
+                            executor.submit_job(job, run_times)  # 用该executor执行任务
                         except MaxInstancesReachedError:
                             self._logger.warning(
                                 'Execution of job "%s" skipped: maximum number of running '
@@ -973,7 +973,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
 
                         # Update the job if it has a next execution time.
                         # Otherwise remove it from the job store.
-                        job_next_run = job.trigger.get_next_fire_time(run_times[-1], now)
+                        job_next_run = job.trigger.get_next_fire_time(run_times[-1], now)  # 每一个job有一个next_run_time
                         if job_next_run:
                             job._modify(next_run_time=job_next_run)  # whats? are you kidding me?
                             jobstore.update_job(job)
@@ -982,7 +982,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
 
                 # Set a new next wakeup time if there isn't one yet or
                 # the jobstore has an even earlier one
-                jobstore_next_run_time = jobstore.get_next_run_time()
+                jobstore_next_run_time = jobstore.get_next_run_time()  # 然后每一个jobstore也有一个next_run_time
                 if jobstore_next_run_time and (next_wakeup_time is None or
                                                jobstore_next_run_time < next_wakeup_time):
                     next_wakeup_time = jobstore_next_run_time.astimezone(self.timezone)
