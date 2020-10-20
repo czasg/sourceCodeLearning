@@ -927,9 +927,9 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         events = []
 
         with self._jobstores_lock:
-            for jobstore_alias, jobstore in six.iteritems(self._jobstores):
+            for jobstore_alias, jobstore in six.iteritems(self._jobstores):  # 遍历每一个 job-store
                 try:
-                    due_jobs = jobstore.get_due_jobs(now)
+                    due_jobs = jobstore.get_due_jobs(now)  # 获取当前 job-store 应该执行的job
                 except Exception as e:
                     # Schedule a wakeup at least in jobstore_retry_interval seconds
                     self._logger.warning('Error getting due jobs from job store %r: %s',

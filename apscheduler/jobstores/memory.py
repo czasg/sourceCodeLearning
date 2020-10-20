@@ -20,7 +20,7 @@ class MemoryJobStore(BaseJobStore):
     def lookup_job(self, job_id):
         return self._jobs_index.get(job_id, (None, None))[0]
 
-    def get_due_jobs(self, now):
+    def get_due_jobs(self, now):  # 给定一个时间，从job中获取获取在此时间之前的任务
         now_timestamp = datetime_to_utc_timestamp(now)
         pending = []
         for job, timestamp in self._jobs:
