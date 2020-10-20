@@ -90,7 +90,7 @@ class MemoryJobStore(BaseJobStore):
         """
         lo, hi = 0, len(self._jobs)
         timestamp = float('inf') if timestamp is None else timestamp
-        while lo < hi:
+        while lo < hi:  # 居然看到了一个二分查找法，厉害了python
             mid = (lo + hi) // 2
             mid_job, mid_timestamp = self._jobs[mid]
             mid_timestamp = float('inf') if mid_timestamp is None else mid_timestamp
